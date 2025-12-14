@@ -38,4 +38,15 @@ Also ensures the correct Ruby version is used via mise."
             (dolist (err flycheck-current-errors)
               (my-flycheck-handle-bundler-error err))))
 
+;; Disable shellcheck for .env files since environment variables are
+;; meant to be sourced externally and SC2034 warnings are false positives
+(defun my-flycheck-disable-shellcheck-for-env-files ()
+  "Disable shellcheck for .env files."
+  (when (and (buffer-file-name)
+             (string-match-p "\\.env\\(\\..*\\)?\\'" (buffer-file-name)))
+    (setq-local flycheck-disabled-checkers
+                (append flycheck-disabled-checkers '(sh-shellcheck)))))
+
+(add-hook 'sh-mode-hook 'my-flycheck-disable-shellcheck-for-env-files)
+
 (provide 'init-flycheck)
