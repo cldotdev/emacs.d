@@ -70,6 +70,19 @@
 
 (advice-add 'rubocop--file-command :around #'my-rubocop-focus-compilation-buffer)
 
+;; Make rubocop-emacs use mise to ensure correct Ruby version
+(defun my-rubocop-use-mise (orig-fun &rest args)
+  "Wrap rubocop commands with mise x to use correct Ruby version."
+  (let ((rubocop-rubocop-command
+         (if (and (executable-find "mise")
+                  (buffer-file-name)
+                  (locate-dominating-file (buffer-file-name) "Gemfile"))
+             "mise x -- bundle exec rubocop"
+           rubocop-rubocop-command)))
+    (apply orig-fun args)))
+
+(advice-add 'rubocop--file-command :around #'my-rubocop-use-mise)
+
 ;; Enhanced Ruby Mode
 ;; https://github.com/zenspider/Enhanced-Ruby-Mode
 ;; (add-to-list 'load-path "~/.emacs.d/package/enhanced-ruby-mode") ; must be added after any path containing old ruby-mode
