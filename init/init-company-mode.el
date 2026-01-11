@@ -23,6 +23,19 @@
   (keymap-unset company-active-map "C-n" 'remove)
   (keymap-unset company-active-map "C-p" 'remove)
   (define-key company-active-map (kbd "M-n") #'company-select-next)
-  (define-key company-active-map (kbd "M-p") #'company-select-previous))
+  (define-key company-active-map (kbd "M-p") #'company-select-previous)
+
+  ;; Fix "Args out of range" error when suffix length > value length.
+  ;; Upstream has not fixed this issue as of 2025-12-29.
+  (defun my/company--common-or-matches-fix (orig-fn value &optional suffix)
+    "Wrapper to prevent negative indices in company--common-or-matches."
+    (let ((result (funcall orig-fn value suffix)))
+      (when result
+        (cl-loop for pair in result
+                 when (< (car pair) 0)
+                 do (setcar pair 0)))
+      result))
+
+  (advice-add 'company--common-or-matches :around #'my/company--common-or-matches-fix))
 
 (provide 'init-company-mode)
