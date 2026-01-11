@@ -296,11 +296,9 @@ appropriate for the specified language instead of HTML comments."
 
 (add-hook  'markdown-mode-hook
            (lambda ()
-             ;; (whitespace-mode)
              (auto-fill-mode -1)
              (visual-line-mode nil)
-             ;; (visual-line-fill-column-mode t)
-             ;; (setq fill-column 120)
+             (setq tab-width 2)
              ;; Use custom fill function for better list item handling
              (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)))
 
