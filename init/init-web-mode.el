@@ -14,6 +14,7 @@
 (add-to-list 'auto-mode-alist '("\\.mako$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.rb\\.tt\\'" . web-mode))
 
 (add-to-list 'web-mode-engine-file-regexps '("django" . "\\.html"))
 (add-to-list 'web-mode-engine-file-regexps '("django" . "\\.jinja"))
@@ -24,6 +25,7 @@
         ("erb"     . "\\.erb\\'")
         ("erb"     . "\\.rhtml\\'")
         ("erb"     . "\\.ejs\\'")
+        ("erb"     . "\\.rb\\.tt\\'")
         ("php"     . "\\.phtml\\'")
         ("php"     . "\\.php\\'")
         ("php"     . "\\.psp\\'")
