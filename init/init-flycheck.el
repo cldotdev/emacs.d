@@ -40,4 +40,8 @@
 
 (add-hook 'sh-mode-hook 'my-flycheck-disable-shellcheck-for-env-files)
 
+;; Disable SC1091 (Not following sourced file) since shellcheck cannot
+;; resolve relative paths in source commands at static analysis time
+(setq flycheck-shellcheck-excluded-warnings '("SC1091"))
+
 (provide 'init-flycheck)
