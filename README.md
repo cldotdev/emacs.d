@@ -36,7 +36,7 @@ and `requirements/python3-package.txt` (Python 3) (Elpy)
 1. Clone this repository to your `$HOME/.emacs.d` directory:
 
 ```bash
-$ git clone --recursive https://github.com/jlhg/emacs.d ~/.emacs.d
+$ git clone --recursive https://github.com/cldotdev/emacs.d ~/.emacs.d
 ```
 
 2. After the cloning, create a symbolic link to `~/init.el`:
