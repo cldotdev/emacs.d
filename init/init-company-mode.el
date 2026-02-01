@@ -1,3 +1,5 @@
+;;; init-company-mode.el --- Company mode configuration -*- lexical-binding: t -*-
+
 (add-to-list 'load-path "~/.emacs.d/package/company-mode")
 
 (require 'company)
@@ -17,6 +19,11 @@
 
 ;; Disable icons
 (setq company-format-margin-function nil)
+
+;; Do not downcase completion candidates from dabbrev.
+(defvar company-dabbrev-downcase)
+(with-eval-after-load 'company-dabbrev
+  (setq company-dabbrev-downcase nil))
 
 ;; When the candidate window is active, use M-n/M-p to navigate items.
 (with-eval-after-load 'company
