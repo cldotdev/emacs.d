@@ -46,6 +46,54 @@
 (advice-add 'imenu-list--show-current-entry
             :override #'my/imenu-list--show-current-entry)
 
+;; Pin imenu-list to the window that was active when it was opened.
+;; Prevents imenu-list from following window switches.
+
+(defvar my/imenu-list--pinned-window nil
+  "Window pinned to the imenu-list sidebar.
+When non-nil, imenu-list tracks this window's buffer and point
+regardless of which window is currently selected.")
+
+(defun my/imenu-list-smart-toggle--pin (orig-fn)
+  "Around advice: set pin when opening imenu-list, clear when closing."
+  (if (get-buffer-window imenu-list-buffer-name t)
+      (progn
+        (setq my/imenu-list--pinned-window nil)
+        (funcall orig-fn))
+    (setq my/imenu-list--pinned-window (selected-window))
+    (funcall orig-fn)))
+
+(advice-add 'imenu-list-smart-toggle
+            :around #'my/imenu-list-smart-toggle--pin)
+
+(defun my/imenu-list-update--pin (orig-fn &optional force-update)
+  "Around advice: redirect imenu-list-update to the pinned window."
+  (cond
+   ((and my/imenu-list--pinned-window
+         (window-live-p my/imenu-list--pinned-window))
+    (with-selected-window my/imenu-list--pinned-window
+      (funcall orig-fn force-update)))
+   (my/imenu-list--pinned-window
+    (setq my/imenu-list--pinned-window nil)
+    (imenu-list-minor-mode -1))
+   (t
+    (funcall orig-fn force-update))))
+
+(advice-add 'imenu-list-update
+            :around #'my/imenu-list-update--pin)
+
+(defun my/imenu-list--on-pinned-buffer-kill ()
+  "Clean up imenu-list when the pinned window's buffer is killed."
+  (when (and my/imenu-list--pinned-window
+             (window-live-p my/imenu-list--pinned-window)
+             (eq (current-buffer) (window-buffer my/imenu-list--pinned-window)))
+    (setq my/imenu-list--pinned-window nil)
+    (imenu-list-minor-mode -1)))
+
+(add-hook 'kill-buffer-hook #'my/imenu-list--on-pinned-buffer-kill)
+
+;; Optional: RET jumps to entry and closes the imenu-list window.
+
 (defvar my/imenu-list-ret-dwim-and-quit nil
   "When non-nil, RET in imenu-list jumps to entry and closes the window.
 For subalist entries, toggle folding instead.")
