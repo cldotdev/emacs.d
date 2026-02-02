@@ -8,7 +8,9 @@
   ;; Disable electric backquote prompt when typing ```
   (setq markdown-gfm-use-electric-backquote nil)
   (define-key markdown-mode-map (kbd "<backtab>") 'markdown-promote)
-  (define-key markdown-mode-map (kbd "RET") #'my/markdown-insert-list-item-on-enter))
+  (define-key markdown-mode-map (kbd "RET") #'my/markdown-insert-list-item-on-enter)
+  (define-key markdown-mode-map (kbd "<C-return>") #'my/markdown-enter-dwim)
+  (define-key markdown-mode-map (kbd "C-j") #'my/markdown-enter-dwim))
 
 (defun my/markdown-insert-list-item-on-enter ()
   "Insert a new list item with appropriate marker when pressing RET in a list.
@@ -82,6 +84,15 @@ Text after cursor is moved to the new line."
      ;; Not a list item: just do normal newline
      (t
       (newline-and-indent)))))
+
+(defun my/markdown-enter-dwim ()
+  "Like `my/markdown-insert-list-item-on-enter' but dismiss company first.
+Use this when company-mode popup is blocking RET from inserting list items."
+  (interactive)
+  (when (bound-and-true-p company-mode)
+    (company-abort))
+  (my/markdown-insert-list-item-on-enter))
+
 
 (defun my/markdown-fill-paragraph-single-item (&optional justify)
   "Fill only the current sub-paragraph within a list item.
