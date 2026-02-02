@@ -111,4 +111,15 @@ For subalist entries, toggle folding instead."
   (when my/imenu-list-ret-dwim-and-quit
     (define-key imenu-list-major-mode-map (kbd "RET") #'my/imenu-list-ret-dwim-and-quit)))
 
+;; Push marker before imenu-list jump so xref-go-back (M-,) returns to
+;; the previous position.
+
+(defun my/imenu-list-push-marker (&rest _)
+  "Save position in the displayed buffer before imenu-list jumps."
+  (when (buffer-live-p imenu-list--displayed-buffer)
+    (with-current-buffer imenu-list--displayed-buffer
+      (xref-push-marker-stack))))
+
+(advice-add 'imenu-list--goto-entry :before #'my/imenu-list-push-marker)
+
 (provide 'init-imenu)
