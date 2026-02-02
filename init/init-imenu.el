@@ -2,6 +2,7 @@
 (require 'imenu-list)
 
 (global-set-key (kbd "C-c i") #'imenu-list-smart-toggle)
+(setq imenu-list-idle-update-delay-time 0)
 
 ;; (with-eval-after-load 'imenu-list
 ;;   (defun my/imenu-list-ret-dwim-and-quit ()
