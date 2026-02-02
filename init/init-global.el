@@ -298,6 +298,10 @@
 ;; Next buffer
 (global-set-key (kbd "C-c n") 'next-buffer)
 
+;; Remap xref navigation: M-, / M-. for back/forward, C-c . for find definitions.
+(global-set-key (kbd "M-.") #'xref-go-forward)
+(global-set-key (kbd "C-c .") #'xref-find-definitions)
+
 ;; GUI settings
 (if (fboundp 'menu-bar-mode)
         (menu-bar-mode -1))
