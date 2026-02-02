@@ -2,7 +2,6 @@
 (require 'imenu-list)
 
 (global-set-key (kbd "C-c i") #'imenu-list-smart-toggle)
-(setq imenu-list-focus-after-activation t)
 
 ;; (with-eval-after-load 'imenu-list
 ;;   (defun my/imenu-list-ret-dwim-and-quit ()
