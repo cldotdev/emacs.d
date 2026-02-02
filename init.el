@@ -272,3 +272,7 @@
 ;; tree-sitter
 ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter
 (require 'init-tree-sitter)
+
+;; imenu-list
+;; https://github.com/bmag/imenu-list
+(require 'init-imenu)
