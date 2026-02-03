@@ -61,8 +61,8 @@ Text after cursor is moved to the new line."
           (save-excursion
             (insert (string-trim-left text-after-cursor))))))
 
-     ;; Match unordered list: indentation + marker (-, *, +) + optional content
-     ((string-match "^\\([ \t]*\\)\\([-*+]\\)\\s-*\\(.*\\)$" line-content)
+     ;; Match unordered list: indentation + marker (-, *, +) + space + optional content
+     ((string-match "^\\([ \t]*\\)\\([-*+]\\)\\s-+\\(.*\\)$" line-content)
       (let* ((indent (match-string 1 line-content))
              (marker (match-string 2 line-content))
              (content (match-string 3 line-content)))
