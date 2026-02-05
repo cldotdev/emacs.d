@@ -219,4 +219,4 @@
 	url = https://github.com/tarsius/cond-let.git
 [submodule "package/imenu-list"]
 	path = package/imenu-list
-	url = https://github.com/bmag/imenu-list.git
+	url = https://github.com/cldotdev/imenu-list.git
