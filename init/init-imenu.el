@@ -3,6 +3,7 @@
 
 (global-set-key (kbd "C-c i") #'imenu-list-smart-toggle)
 (setq imenu-list-idle-update-delay-time 0)
+(setq imenu-list-auto-resize t)
 
 ;; Use a ">" marker instead of hl-line to indicate the current entry.
 ;; The marker is only shown when imenu-list is not the active window.
