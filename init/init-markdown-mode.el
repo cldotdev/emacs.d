@@ -97,8 +97,7 @@ indented continuations, preserving proper indentation."
       (cond
        ;; Case 1: We're on a list marker line
        ((looking-at markdown-regex-list)
-        (let ((marker-indent (current-indentation))
-              (marker-length (length (match-string 0))))
+        (let ((marker-length (length (match-string 0))))
           (setq start (point))
           ;; Find the end of the first paragraph (before indented continuation or next list item)
           (forward-line 1)
@@ -109,7 +108,7 @@ indented continuations, preserving proper indentation."
             (forward-line 1))
           (setq end (point))
           ;; Fill with proper indentation for continuation lines
-          (let ((fill-prefix (make-string (+ marker-indent marker-length) ?\s)))
+          (let ((fill-prefix (make-string marker-length ?\s)))
             (fill-region start end justify nil))))
 
        ;; Case 2: We're on an indented continuation line within a list item
