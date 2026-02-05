@@ -24,13 +24,13 @@
 	url = https://github.com/magnars/dash.el.git
 [submodule "package/flycheck"]
 	path = package/flycheck
-	url = https://github.com/jlhg/flycheck.git
+	url = https://github.com/cldotdev/flycheck.git
 [submodule "package/swift-mode"]
 	path = package/swift-mode
 	url = https://github.com/chrisbarrett/swift-mode.git
 [submodule "snippets"]
 	path = snippets
-	url = https://github.com/jlhg/yasnippet-snippets.git
+	url = https://github.com/cldotdev/yasnippet-snippets.git
 [submodule "package/Highlight-Indentation-for-Emacs"]
 	path = package/Highlight-Indentation-for-Emacs
 	url = https://github.com/antonj/Highlight-Indentation-for-Emacs.git
@@ -126,7 +126,7 @@
 	url = https://github.com/magit/transient.git
 [submodule "package/nord-emacs"]
 	path = package/nord-emacs
-	url = https://github.com/jlhg/nord-emacs.git
+	url = https://github.com/cldotdev/nord-emacs.git
 [submodule "package/zenburn-emacs"]
 	path = package/zenburn-emacs
 	url = https://github.com/bbatsov/zenburn-emacs.git
@@ -177,7 +177,7 @@
 	url = https://github.com/emacs-tree-sitter/ts-fold
 [submodule "package/tree-sitter-langs"]
 	path = package/tree-sitter-langs
-	url = https://github.com/jlhg/tree-sitter-langs.git
+	url = https://github.com/cldotdev/tree-sitter-langs.git
 [submodule "package/rust-mode"]
 	path = package/rust-mode
 	url = https://github.com/rust-lang/rust-mode.git
