@@ -4,6 +4,19 @@
 (global-set-key (kbd "C-c i") #'imenu-list-smart-toggle)
 (setq imenu-list-idle-update-delay-time 0)
 (setq imenu-list-auto-resize t)
+(setq imenu-max-item-length nil)
+
+;; Cap imenu-list window width at 30% of frame width.
+(defun my/imenu-list-resize-window ()
+  "Resize imenu-list window to fit content, capped at 40% frame width."
+  (when imenu-list--line-entries
+    (let* ((fit-window-to-buffer-horizontally t)
+           (max-width (max 20 (round (* (frame-width) 0.3)))))
+      (dolist (win (get-buffer-window-list (imenu-list-get-buffer-create)))
+        (fit-window-to-buffer win nil nil max-width)))))
+
+(advice-add 'imenu-list-resize-window
+            :override #'my/imenu-list-resize-window)
 
 ;; Use a ">" marker instead of hl-line to indicate the current entry.
 ;; The marker is only shown when imenu-list is not the active window.
@@ -46,6 +59,24 @@
 
 (advice-add 'imenu-list--show-current-entry
             :override #'my/imenu-list--show-current-entry)
+
+;; Also show the full heading when navigating inside the imenu-list
+;; buffer itself (e.g. n/p keys).
+
+(defun my/imenu-list-echo-heading ()
+  "Show the current line's full text in the echo area when truncated."
+  (when (derived-mode-p 'imenu-list-major-mode)
+    (let ((px-line (car (window-text-pixel-size nil
+                          (line-beginning-position)
+                          (line-end-position))))
+          (px-win (window-body-width nil t)))
+      (when (>= px-line (1- px-win))
+        (message "%s" (string-trim
+                       (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position))))))))
+
+(add-hook 'post-command-hook #'my/imenu-list-echo-heading)
 
 ;; Pin imenu-list to the window that was active when it was opened.
 ;; Prevents imenu-list from following window switches.
