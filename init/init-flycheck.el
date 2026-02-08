@@ -40,6 +40,23 @@
 
 (add-hook 'sh-mode-hook 'my-flycheck-disable-shellcheck-for-env-files)
 
+;; Re-detect shell dialect from shebang before Flycheck runs.
+;; When creating new .sh files, sh-mode sets sh-shell to `sh` (default)
+;; before the shebang is written, causing ShellCheck to use POSIX mode.
+(defun my-flycheck-set-shell-from-shebang ()
+  "Re-detect shell from shebang before Flycheck runs."
+  (save-excursion
+    (goto-char (point-min))
+    (when (looking-at auto-mode-interpreter-regexp)
+      (let ((interp (file-name-nondirectory (match-string 2))))
+        (when (and interp (not (string= interp (symbol-name sh-shell))))
+          (sh-set-shell interp nil nil))))))
+
+(add-hook 'sh-mode-hook
+          (lambda ()
+            (add-hook 'flycheck-before-syntax-check-hook
+                      #'my-flycheck-set-shell-from-shebang nil t)))
+
 ;; Disable SC1091 (Not following sourced file) since shellcheck cannot
 ;; resolve relative paths in source commands at static analysis time
 (setq flycheck-shellcheck-excluded-warnings '("SC1091"))
