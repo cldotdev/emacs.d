@@ -9301,6 +9301,8 @@ Use matching function MATCHER."
           ;; Set background for block as well as opening and closing lines.
           (font-lock-append-text-property
            bol-prev eol-next 'face 'markdown-code-face)
+          ;; Ensure jit-lock re-fontifies the entire block as a unit.
+          (put-text-property bol-prev eol-next 'font-lock-multiline t)
           ;; Set invisible property for lines before and after, including newline.
           (add-text-properties bol-prev start '(invisible markdown-markup))
           (add-text-properties end eol-next '(invisible markdown-markup)))))
