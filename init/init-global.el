@@ -176,7 +176,7 @@
 
 ;; Word wrap
 (setq-default truncate-lines t)
-(global-set-key [(control f11)] 'toggle-truncate-lines)
+(global-set-key (kbd "C-c g") 'toggle-truncate-lines)
 
 ;; Enabling font lock
 (if (fboundp 'global-font-lock-mode)
