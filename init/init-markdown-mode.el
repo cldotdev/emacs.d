@@ -299,6 +299,46 @@ appropriate for the specified language instead of HTML comments."
              (visual-line-mode nil)
              (setq tab-width 2)
              ;; Use custom fill function for better list item handling
-             (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)))
+             (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
+             ;; Clear stale buffer-local overrides from previous config
+             ;; versions so the global electric-pair-inhibit-predicate
+             ;; takes effect.
+             (kill-local-variable 'electric-pair-inhibit-predicate)
+             (kill-local-variable 'electric-pair-skip-self)
+             (kill-local-variable 'electric-pair-pairs)))
+
+(defun my/gfm-electric-backtick ()
+  "Handle backtick auto-pairing in gfm-mode.
+Backtick has punctuation syntax in markdown-mode, so electric-pair-mode
+ignores it.  This function implements pairing and skipping manually,
+with the rule that pairing/skipping only happens when the backtick is
+NOT adjacent to another backtick (to avoid interfering with ``` code
+fence syntax).  Also cleans up the trailing auto-paired backtick when
+a ``` fence is formed."
+  (when (and electric-pair-mode
+             (eql last-command-event ?`))
+    (let ((prev (char-before (1- (point))))
+          (next (char-after)))
+      (cond
+       ;; Both sides are `: skip over closing ` to build code fence.
+       ;; e.g. `|` -> type ` -> ```|
+       ((and (eq prev ?`) (eq next ?`))
+        (forward-char 1))
+       ;; Skip over closing ` (when not preceded by `).
+       ;; e.g. `hello|` -> type ` -> `hello`|
+       ((and (eq next ?`)
+             (not (eq prev ?`)))
+        (delete-char -1)
+        (forward-char 1))
+       ;; Insert closing ` (when not adjacent to `).
+       ;; e.g. |  -> type ` -> `|`
+       ((and (not (eq prev ?`))
+             (not (eq next ?`)))
+        (save-excursion (insert ?`)))))))
+
+(add-hook 'gfm-mode-hook
+          (lambda ()
+            (remove-hook 'post-self-insert-hook #'gfm--electric-pair-fence-code-block t)
+            (add-hook 'post-self-insert-hook #'my/gfm-electric-backtick 'append t)))
 
 (provide 'init-markdown-mode)

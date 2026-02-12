@@ -242,10 +242,12 @@
 ;;         (if (char-equal c ?\") t (electric-pair-default-inhibit c))))
 (setq electric-pair-skip-whitespace nil)
 
-(defun inhibit-electric-pair-mode-in-minibuffer (char)
-  (minibufferp))
-
-(setq electric-pair-inhibit-predicate #'inhibit-electric-pair-mode-in-minibuffer)
+(setq electric-pair-inhibit-predicate
+      (lambda (c)
+        (or (minibufferp)
+            ;; Don't auto-pair when the preceding char is the same,
+            ;; e.g. typing " after " or ` after `.
+            (eq (char-before (1- (point))) c))))
 
 ;; Joins the current line and the previous line, by deleting a newline
 ;; and all surrounding spaces, usually leaving a single space.
