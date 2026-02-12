@@ -330,10 +330,14 @@ a ``` fence is formed."
              (not (eq prev ?`)))
         (delete-char -1)
         (forward-char 1))
-       ;; Insert closing ` (when not adjacent to `).
+       ;; Insert closing ` (when not adjacent to ` or word characters).
        ;; e.g. |  -> type ` -> `|`
+       ;; but:  |word -> type ` -> `|word  (no pairing)
+       ;;       word| -> type ` -> word`|  (no pairing)
        ((and (not (eq prev ?`))
-             (not (eq next ?`)))
+             (not (eq next ?`))
+             (not (and prev (eq (char-syntax prev) ?w)))
+             (not (and next (eq (char-syntax next) ?w))))
         (save-excursion (insert ?`)))))))
 
 (add-hook 'gfm-mode-hook
