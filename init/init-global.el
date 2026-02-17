@@ -349,6 +349,31 @@
 (global-subword-mode 1)
 ;; (add-hook 'prog-mode-hook 'subword-mode)
 
+;; Fix: subword-backward skips script boundaries (e.g. Latin <-> CJK)
+(defun my/subword-backward-with-script-boundary ()
+  "Like `subword-backward-internal' but also stop at script boundaries.
+Prevents backward word motion from skipping across Latin/CJK transitions."
+  (let ((start (point)))
+    (subword-backward-internal)
+    (let ((end (point)))
+      (when (< end start)
+        ;; Scan backward from start to find the nearest script boundary
+        (let ((pos (1- start)))
+          (while (> pos end)
+            (let* ((c1 (char-after (1- pos)))
+                   (c2 (char-after pos))
+                   (s1 (and c1 (aref char-script-table c1)))
+                   (s2 (and c2 (aref char-script-table c2))))
+              (when (and s1 s2
+                         (eq (char-syntax c1) ?w)
+                         (eq (char-syntax c2) ?w)
+                         (not (eq s1 s2)))
+                (goto-char pos)
+                (setq pos end)))  ; break
+            (setq pos (1- pos))))))))
+
+(setq subword-backward-function #'my/subword-backward-with-script-boundary)
+
 ;; Switch focus after buffer split in emacs.
 ;; https://stackoverflow.com/questions/6464738/how-can-i-switch-focus-after-buffer-split-in-emacs
 (defun split-window-vertically-and-focus ()
