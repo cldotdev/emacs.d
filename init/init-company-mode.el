@@ -20,9 +20,13 @@
 ;; Disable icons
 (setq company-format-margin-function nil)
 
-;; Do not downcase completion candidates from dabbrev.
+;; Keep dabbrev matching case-sensitive to avoid mixed-case candidates
+;; like "creATE" (from keep-prefix + no downcase).
+;; Typing "cre" still matches "createElement" but not "CREATE".
+(defvar company-dabbrev-ignore-case)
 (defvar company-dabbrev-downcase)
 (with-eval-after-load 'company-dabbrev
+  (setq company-dabbrev-ignore-case nil)
   (setq company-dabbrev-downcase nil))
 
 ;; When the candidate window is active, use M-n/M-p to navigate items.
