@@ -13,10 +13,28 @@
 ;; (add-hook 'prog-mode-hook 'whitespace-mode)
 
 ;; Delete trailing whitespace
+;; Preserve trailing whitespace on line 1 when it starts with "/" (slash
+;; commands for Claude prompts need a trailing space after the command).
 (add-hook 'before-save-hook
-          (lambda()
+          (lambda ()
             (unless (eq major-mode 'csv-mode)
-              (delete-trailing-whitespace))))
+              (save-restriction
+                (widen)
+                (let (first-line-trailing-ws)
+                  (save-excursion
+                    (goto-char (point-min))
+                    (when (looking-at "/\\S-")
+                      (let ((eol (line-end-position)))
+                        (goto-char eol)
+                        (skip-chars-backward " \t")
+                        (when (< (point) eol)
+                          (setq first-line-trailing-ws
+                                (buffer-substring (point) eol)))))
+                    (delete-trailing-whitespace)
+                    (when first-line-trailing-ws
+                      (goto-char (point-min))
+                      (end-of-line)
+                      (insert first-line-trailing-ws))))))))
 
 ;; Use system clipboard instead of kill reagion
 (global-set-key "\C-w" 'clipboard-kill-region)
