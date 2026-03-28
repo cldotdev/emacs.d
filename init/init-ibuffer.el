@@ -31,6 +31,7 @@
 
 ;; Loads version control groups (call on entering ibuffer)
 (defun ibuffer-vc-add-vc-filter-groups ()
+  "Add VC root filter groups to current Ibuffer filter groups."
   (interactive)
   (dolist (group (ibuffer-vc-generate-filter-groups-by-vc-root))
     (add-to-list 'ibuffer-filter-groups group t)))
@@ -46,14 +47,14 @@
         (t (format "%8d" (buffer-size)))))
 
      (setq ibuffer-formats '((mark modified read-only " "
-                                   (name 18 18 :left :elide)
+                                   (name 30 30 :left :elide)
                                    " "
                                    (size-h 9 -1 :right)
                                    " "
                                    (mode 16 16 :left :elide)
                                    " " filename-and-process)
                              (mark modified read-only vc-status-mini " "
-                                   (name 18 18 :left :elide)
+                                   (name 30 30 :left :elide)
                                    " "
                                    (size-h 9 -1 :right)
                                    " "
