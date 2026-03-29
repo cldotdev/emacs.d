@@ -81,7 +81,7 @@
 (defvar my-backup-directory "~/.emacs.d/backup"
   "Directory to store backup files.")
 
-(defvar my-max-backup-files 200
+(defvar my-max-backup-files 1000
   "Maximum number of backup files to keep.")
 
 (defvar my-max-backup-file-size 204800
@@ -122,17 +122,23 @@
     "\\.bak$" "\\.tmp$" "\\.temp$" "core$")
   "List of regex patterns for sensitive files that should not be backed up.")
 
-;; Method 1: Filename pattern exclusion using backup-enable-predicate
+;; Backup enable predicate (allows /tmp files, excludes empty and sensitive files)
 (setq backup-enable-predicate
       (lambda (name)
-        (and (normal-backup-enable-predicate name)
-             ;; Exclude files larger than the specified size
-             (let ((size (nth 7 (file-attributes name))))
-               (or (not size) (< size my-max-backup-file-size)))
-             ;; Exclude sensitive file patterns
-             (not (cl-some (lambda (pattern)
-                            (string-match-p pattern name))
-                          my-sensitive-file-patterns)))))
+        (and
+         ;; File must exist and be readable
+         (file-exists-p name)
+         (not (file-symlink-p name))
+         ;; Exclude empty files
+         (let ((size (nth 7 (file-attributes name))))
+           (and size (> size 0)))
+         ;; Exclude files larger than the specified size
+         (let ((size (nth 7 (file-attributes name))))
+           (or (not size) (< size my-max-backup-file-size)))
+         ;; Exclude sensitive file patterns
+         (not (cl-some (lambda (pattern)
+                         (string-match-p pattern name))
+                       my-sensitive-file-patterns)))))
 
 ;; Method 2: Directory exclusion using backup-directory-alist
 (setq backup-directory-alist
@@ -145,8 +151,8 @@
 (setq
  delete-old-versions t    ; Auto-delete old versions per file
  version-control t
- kept-new-versions 3      ; Keep 3 newest versions
- kept-old-versions 2)     ; Keep 2 oldest versions (total 5 per file)
+ kept-new-versions 7      ; Keep 7 newest versions
+ kept-old-versions 3)     ; Keep 3 oldest versions (total 10 per file)
 
 ;; Limit total number of backup files
 (defun cleanup-old-backup-files ()
@@ -164,8 +170,20 @@
           (when (file-regular-p file)
             (delete-file file)))))))
 
+;; Back up on every save, skip if content unchanged from latest backup
+(add-hook 'before-save-hook
+          (lambda ()
+            (when (and buffer-file-name buffer-backed-up)
+              (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
+                                             #'file-newer-than-file-p))))
+                (when (or (not latest-backup)
+                          (not (file-exists-p latest-backup))
+                          (not (zerop (call-process "cmp" nil nil nil
+                                                    "-s" buffer-file-name latest-backup))))
+                  (setq buffer-backed-up nil))))))
+
 ;; Run cleanup after saving files
-(add-hook 'after-save-hook 'cleanup-old-backup-files)
+(add-hook 'after-save-hook #'cleanup-old-backup-files)
 
 ;; Default indentation
 (setq-default indent-tabs-mode nil)
