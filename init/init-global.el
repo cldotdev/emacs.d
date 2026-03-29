@@ -166,10 +166,12 @@
 (add-hook 'before-save-hook
           (lambda ()
             (when buffer-file-name
-              (if (or (= (buffer-size) 0)
-                      (let ((size (nth 7 (file-attributes buffer-file-name))))
-                        (and size (>= size my-max-backup-file-size))))
-                  ;; Empty or oversized: suppress backup
+              (if (let ((disk-size (nth 7 (file-attributes buffer-file-name))))
+                    (or (= (buffer-size) 0)
+                        (not disk-size)        ; file does not exist yet
+                        (= disk-size 0)        ; nothing on disk to back up
+                        (>= disk-size my-max-backup-file-size)))
+                  ;; Empty, non-existent, or oversized on disk: suppress backup
                   (setq buffer-backed-up t)
                 ;; Force backup unless content matches latest backup
                 (when buffer-backed-up
