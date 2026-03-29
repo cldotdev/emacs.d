@@ -122,23 +122,15 @@
     "\\.bak$" "\\.tmp$" "\\.temp$" "core$")
   "List of regex patterns for sensitive files that should not be backed up.")
 
-;; Backup enable predicate (allows /tmp files, excludes empty and sensitive files)
+;; Backup enable predicate (allows /tmp files, excludes sensitive files)
+;; Only check path-based conditions here; transient conditions (empty,
+;; oversized, unchanged) are handled in before-save-hook, because this
+;; predicate runs once at visit time and permanently sets backup-inhibited.
 (setq backup-enable-predicate
       (lambda (name)
-        (and
-         ;; File must exist and be readable
-         (file-exists-p name)
-         (not (file-symlink-p name))
-         ;; Exclude empty files
-         (let ((size (nth 7 (file-attributes name))))
-           (and size (> size 0)))
-         ;; Exclude files larger than the specified size
-         (let ((size (nth 7 (file-attributes name))))
-           (or (not size) (< size my-max-backup-file-size)))
-         ;; Exclude sensitive file patterns
-         (not (cl-some (lambda (pattern)
-                         (string-match-p pattern name))
-                       my-sensitive-file-patterns)))))
+        (not (cl-some (lambda (pattern)
+                        (string-match-p pattern name))
+                      my-sensitive-file-patterns))))
 
 ;; Method 2: Directory exclusion using backup-directory-alist
 (setq backup-directory-alist
@@ -170,17 +162,24 @@
           (when (file-regular-p file)
             (delete-file file)))))))
 
-;; Back up on every save, skip if content unchanged from latest backup
+;; Back up on every save, skip if buffer is empty or content unchanged
 (add-hook 'before-save-hook
           (lambda ()
-            (when (and buffer-file-name buffer-backed-up)
-              (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
-                                             #'file-newer-than-file-p))))
-                (when (or (not latest-backup)
-                          (not (file-exists-p latest-backup))
-                          (not (zerop (call-process "cmp" nil nil nil
-                                                    "-s" buffer-file-name latest-backup))))
-                  (setq buffer-backed-up nil))))))
+            (when buffer-file-name
+              (if (or (= (buffer-size) 0)
+                      (let ((size (nth 7 (file-attributes buffer-file-name))))
+                        (and size (>= size my-max-backup-file-size))))
+                  ;; Empty or oversized: suppress backup
+                  (setq buffer-backed-up t)
+                ;; Force backup unless content matches latest backup
+                (when buffer-backed-up
+                  (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
+                                                  #'file-newer-than-file-p))))
+                    (when (or (not latest-backup)
+                              (not (file-exists-p latest-backup))
+                              (not (zerop (call-process "cmp" nil nil nil
+                                                        "-s" buffer-file-name latest-backup))))
+                      (setq buffer-backed-up nil))))))))
 
 ;; Run cleanup after saving files
 (add-hook 'after-save-hook #'cleanup-old-backup-files)
