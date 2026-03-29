@@ -162,7 +162,9 @@
           (when (file-regular-p file)
             (delete-file file)))))))
 
-;; Back up on every save, skip if buffer is empty or content unchanged
+;; Back up on every save, skip if buffer is empty or content unchanged.
+;; Appended (APPEND=t) so it runs after whitespace-cleanup hooks, ensuring
+;; the buffer content reflects the final saved state for comparison.
 (add-hook 'before-save-hook
           (lambda ()
             (when buffer-file-name
@@ -173,15 +175,17 @@
                         (>= disk-size my-max-backup-file-size)))
                   ;; Empty, non-existent, or oversized on disk: suppress backup
                   (setq buffer-backed-up t)
-                ;; Force backup unless content matches latest backup
-                (when buffer-backed-up
-                  (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
-                                                  #'file-newer-than-file-p))))
-                    (when (or (not latest-backup)
-                              (not (file-exists-p latest-backup))
-                              (not (zerop (call-process "cmp" nil nil nil
-                                                        "-s" buffer-file-name latest-backup))))
-                      (setq buffer-backed-up nil))))))))
+                ;; Compare buffer content (post-processing) with latest backup
+                (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
+                                                #'file-newer-than-file-p))))
+                  (setq buffer-backed-up
+                        (and latest-backup
+                             (file-exists-p latest-backup)
+                             (string= (buffer-string)
+                                      (with-temp-buffer
+                                        (insert-file-contents latest-backup)
+                                        (buffer-string)))))))))
+          nil t)
 
 ;; Run cleanup after saving files
 (add-hook 'after-save-hook #'cleanup-old-backup-files)
