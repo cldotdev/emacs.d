@@ -132,13 +132,9 @@
                         (string-match-p pattern name))
                       my-sensitive-file-patterns))))
 
-;; Method 2: Directory exclusion using backup-directory-alist
+;; Centralized backup directory (predicate already excludes sensitive files)
 (setq backup-directory-alist
-      `(;; Exclude sensitive patterns by setting backup location to nil
-        ,@(mapcar (lambda (pattern) `(,pattern . nil))
-                  my-sensitive-file-patterns)
-        ;; Default backup location for other files
-        ("." . ,my-backup-directory)))
+      `(("." . ,my-backup-directory)))
 
 (setq
  delete-old-versions t    ; Auto-delete old versions per file
@@ -146,49 +142,57 @@
  kept-new-versions 7      ; Keep 7 newest versions
  kept-old-versions 3)     ; Keep 3 oldest versions (total 10 per file)
 
-;; Limit total number of backup files
-(defun cleanup-old-backup-files ()
+;; Limit total number of backup files (runs on idle timer, not every save)
+(defun my-cleanup-old-backup-files ()
   "Keep only the N most recent backup files in backup directory."
-  (let ((backup-dir (expand-file-name my-backup-directory))
-        (max-backup-files my-max-backup-files))
+  (let ((backup-dir (expand-file-name my-backup-directory)))
     (when (file-directory-p backup-dir)
-      (let* ((backup-files (directory-files backup-dir t "^[^.]"))
-             (sorted-files (sort backup-files
-                                 (lambda (a b)
-                                   (time-less-p (nth 5 (file-attributes b))
-                                                (nth 5 (file-attributes a))))))
-             (files-to-delete (nthcdr max-backup-files sorted-files)))
-        (dolist (file files-to-delete)
-          (when (file-regular-p file)
-            (delete-file file)))))))
+      (let* ((files (directory-files backup-dir t "^[^.]"))
+             ;; Collect attributes once to avoid repeated stat calls in sort
+             (file-mtimes (mapcar (lambda (f)
+                                    (cons f (nth 5 (file-attributes f))))
+                                  files))
+             (sorted (sort file-mtimes
+                           (lambda (a b)
+                             (time-less-p (cdr b) (cdr a)))))
+             (to-delete (nthcdr my-max-backup-files sorted)))
+        (dolist (entry to-delete)
+          (when (file-regular-p (car entry))
+            (delete-file (car entry))))))))
 
 ;; Back up on every save, skip if buffer is empty or content unchanged.
-;; Appended (APPEND=t) so it runs after whitespace-cleanup hooks, ensuring
-;; the buffer content reflects the final saved state for comparison.
-(add-hook 'before-save-hook
-          (lambda ()
-            (when buffer-file-name
-              (if (let ((disk-size (nth 7 (file-attributes buffer-file-name))))
-                    (or (= (buffer-size) 0)
-                        (not disk-size)        ; file does not exist yet
-                        (= disk-size 0)        ; nothing on disk to back up
-                        (>= disk-size my-max-backup-file-size)))
-                  ;; Empty, non-existent, or oversized on disk: suppress backup
-                  (setq buffer-backed-up t)
-                ;; Compare buffer content (post-processing) with latest backup
-                (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
-                                                #'file-newer-than-file-p))))
-                  (setq buffer-backed-up
-                        (and latest-backup
-                             (file-exists-p latest-backup)
-                             (string= (buffer-string)
-                                      (with-temp-buffer
-                                        (insert-file-contents latest-backup)
-                                        (buffer-string)))))))))
-          nil t)
+;; Uses depth 90 so it runs after whitespace-cleanup hooks (depth 0),
+;; ensuring the buffer content reflects the final saved state.
+(defun my-backup-before-save ()
+  "Set `buffer-backed-up' to control whether this save creates a backup.
+Suppress backup for empty, non-existent, or oversized files.
+For other files, compare buffer content with latest backup and
+skip if unchanged."
+  (when buffer-file-name
+    (let ((disk-size (nth 7 (file-attributes buffer-file-name))))
+      (if (or (= (buffer-size) 0)
+              (not disk-size)              ; file does not exist yet
+              (= disk-size 0)             ; nothing on disk to back up
+              (>= disk-size my-max-backup-file-size))
+          (setq buffer-backed-up t)
+        ;; Short-circuit: if buffer size differs from backup size, skip read
+        (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
+                                        #'file-newer-than-file-p))))
+          (setq buffer-backed-up
+                (and latest-backup
+                     (file-exists-p latest-backup)
+                     (let ((backup-size (nth 7 (file-attributes latest-backup))))
+                       (and backup-size
+                            (= (buffer-size) backup-size)
+                            (string= (buffer-string)
+                                     (with-temp-buffer
+                                       (insert-file-contents latest-backup)
+                                       (buffer-string))))))))))))
 
-;; Run cleanup after saving files
-(add-hook 'after-save-hook #'cleanup-old-backup-files)
+(add-hook 'before-save-hook #'my-backup-before-save 90)
+
+;; Run cleanup on idle instead of every save
+(run-with-idle-timer 30 t #'my-cleanup-old-backup-files)
 
 ;; Default indentation
 (setq-default indent-tabs-mode nil)
