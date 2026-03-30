@@ -160,36 +160,51 @@
           (when (file-regular-p (car entry))
             (delete-file (car entry))))))))
 
-;; Back up on every save, skip if buffer is empty or content unchanged.
-;; Uses depth 90 so it runs after whitespace-cleanup hooks (depth 0),
-;; ensuring the buffer content reflects the final saved state.
+;; Suppress Emacs' built-in backup (which copies the OLD on-disk file).
+;; We create backups ourselves in after-save-hook so that each backup
+;; contains the just-saved content (post-processed by all hooks).
+;;
+;; | Step | Action          | Buffer  | Latest backup      | Match? | Backup created?        |
+;; |------+-----------------+---------+--------------------+--------+------------------------|
+;; |    1 | new file, save  | "1"     | (none)             | --     | backup.~1~ = "1"       |
+;; |    2 | edit to "123"   | "123"   | backup.~1~ = "1"   | no     | backup.~2~ = "123"     |
+;; |    3 | edit to "12345" | "12345" | backup.~2~ = "123" | no     | backup.~3~ = "12345"   |
+;; |    4 | save unchanged  | "12345" | backup.~3~ = "12345" | yes  | skipped                |
 (defun my-backup-before-save ()
-  "Set `buffer-backed-up' to control whether this save creates a backup.
-Suppress backup for empty, non-existent, or oversized files.
-For other files, compare buffer content with latest backup and
-skip if unchanged."
+  "Suppress Emacs' built-in backup; handled in `my-backup-after-save'."
   (when buffer-file-name
-    (let ((disk-size (nth 7 (file-attributes buffer-file-name))))
-      (if (or (= (buffer-size) 0)
-              (not disk-size)              ; file does not exist yet
-              (= disk-size 0)             ; nothing on disk to back up
-              (>= disk-size my-max-backup-file-size))
-          (setq buffer-backed-up t)
-        ;; Short-circuit: if buffer size differs from backup size, skip read
-        (let ((latest-backup (car (sort (file-backup-file-names buffer-file-name)
-                                        #'file-newer-than-file-p))))
-          (setq buffer-backed-up
-                (and latest-backup
-                     (file-exists-p latest-backup)
-                     (let ((backup-size (nth 7 (file-attributes latest-backup))))
-                       (and backup-size
-                            (= (buffer-size) backup-size)
-                            (string= (buffer-string)
-                                     (with-temp-buffer
-                                       (insert-file-contents latest-backup)
-                                       (buffer-string))))))))))))
+    (setq buffer-backed-up t)))
 
 (add-hook 'before-save-hook #'my-backup-before-save 90)
+
+;; After every save, compare the just-saved file with the latest backup.
+;; Create a new numbered backup when content differs and file is non-empty
+;; and not oversized.  This ensures each backup is a snapshot of the saved
+;; content rather than the old on-disk content.
+(defun my-backup-after-save ()
+  "Copy the just-saved file to a numbered backup when it differs from
+the latest existing backup.  Skip empty or oversized files."
+  (when (and buffer-file-name (not backup-inhibited))
+    (let ((file-size (nth 7 (file-attributes buffer-file-name))))
+      (when (and file-size (> file-size 0)
+                 (< file-size my-max-backup-file-size))
+        (let* ((backups (file-backup-file-names buffer-file-name))
+               (latest-backup (when backups
+                                (cl-reduce (lambda (a b)
+                                             (if (file-newer-than-file-p a b) a b))
+                                           backups))))
+          (unless (and latest-backup
+                       (let ((backup-size (nth 7 (file-attributes latest-backup))))
+                         (and backup-size
+                              (= file-size backup-size)
+                              (zerop (call-process "cmp" nil nil nil
+                                                   "-s" buffer-file-name
+                                                   latest-backup)))))
+            (let ((target (car (find-backup-file-name buffer-file-name))))
+              (when target
+                (copy-file buffer-file-name target t)))))))))
+
+(add-hook 'after-save-hook #'my-backup-after-save)
 
 ;; Run cleanup on idle instead of every save
 (run-with-idle-timer 30 t #'my-cleanup-old-backup-files)
