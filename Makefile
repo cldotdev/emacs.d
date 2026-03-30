@@ -33,5 +33,5 @@ all:
 		-L ${cond_let_dir} \
 		-L ${pkg_dir}" >config.mk && \
 		make clean && \
-		make
+		make lisp
 	cd ${helm_dir} && make clean && EMACSLOADPATH="${async_dir}:" make
