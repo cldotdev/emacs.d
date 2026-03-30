@@ -200,9 +200,12 @@ the latest existing backup.  Skip empty or oversized files."
                               (zerop (call-process "cmp" nil nil nil
                                                    "-s" buffer-file-name
                                                    latest-backup)))))
-            (let ((target (car (find-backup-file-name buffer-file-name))))
+            (let* ((result (find-backup-file-name buffer-file-name))
+                   (target (car result)))
               (when target
-                (copy-file buffer-file-name target t)))))))))
+                (copy-file buffer-file-name target t)
+                (dolist (old (cdr result))
+                  (ignore-errors (delete-file old)))))))))))
 
 (add-hook 'after-save-hook #'my-backup-after-save)
 
