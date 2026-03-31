@@ -355,6 +355,7 @@ a ``` fence is formed."
 (add-hook 'gfm-mode-hook
           (lambda ()
             (remove-hook 'post-self-insert-hook #'gfm--electric-pair-fence-code-block t)
-            (add-hook 'post-self-insert-hook #'my/gfm-electric-backtick 'append t)))
+            ;; (add-hook 'post-self-insert-hook #'my/gfm-electric-backtick 'append t)
+            ))
 
 (provide 'init-markdown-mode)
