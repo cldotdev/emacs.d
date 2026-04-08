@@ -137,12 +137,45 @@ Treats list items like markdown-mode: first line and indented continuations sepa
 
 (advice-add 'log-edit-fill-entry :around #'my/git-commit-fill-entry-advice)
 
+(defun my/git-commit-reformat-revert--reformat-subject (original-subject)
+  "Return the reformatted subject for a revert commit.
+ORIGINAL-SUBJECT is the text quoted inside the Git revert message.
+Returns \"revert(scope): desc\" or \"revert: desc\"."
+  (if (string-match "^[a-z]+\\(?:(\\([^)]+\\))\\)?: \\(.+\\)$" original-subject)
+      (if (match-string 1 original-subject)
+          (format "revert(%s): %s"
+                  (match-string 1 original-subject)
+                  (match-string 2 original-subject))
+        (format "revert: %s" (match-string 2 original-subject)))
+    (format "revert: %s" original-subject)))
+
+(defun my/git-commit-reformat-revert ()
+  "Reformat a Git revert commit message to Conventional Commits style.
+Transforms the subject line and body hash line, then moves point to the
+end of the subject line.  Does nothing when the buffer does not start
+with a Git revert subject."
+  (save-match-data
+    (goto-char (point-min))
+    (when (looking-at "^Revert \"\\(.+\\)\"$")
+      (let* ((original-subject (match-string 1))
+             (new-subject (my/git-commit-reformat-revert--reformat-subject
+                           original-subject)))
+        (delete-region (point) (line-end-position))
+        (insert new-subject)
+        (when (re-search-forward
+               "^This reverts commit \\([0-9a-f]+\\)\\.$" nil t)
+          (replace-match (format "Refs: %s" (substring (match-string 1) 0 7))))
+        (goto-char (point-min))
+        (end-of-line)))))
+
 ;; 50/72 formatting for Git commit message
 (add-hook 'git-commit-setup-hook
           (lambda()
             (setq git-commit-summary-max-length 72)
             (auto-fill-mode t)
             (setq fill-column 72)))
+
+(add-hook 'git-commit-setup-hook #'my/git-commit-reformat-revert)
 
 (setq magit-section-visibility-indicator nil)
 
