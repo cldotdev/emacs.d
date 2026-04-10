@@ -48,6 +48,9 @@
 ;; http://magit.github.io/magit/index.html
 (require 'init-magit)
 
+;; GPG loopback pinentry for passphrase prompt in minibuffer
+(require 'init-pinentry)
+
 ;; insert-time
 ;; https://github.com/rmm5t/insert-time.el
 (require 'init-insert-time)
