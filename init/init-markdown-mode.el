@@ -324,7 +324,7 @@ the previous line indentation for auto-indent."
   "Setup for markdown-mode buffers."
   (auto-fill-mode -1)
   (visual-line-mode 1)
-  (setq-local tab-width 4)
+  (setq-local tab-width 2)
   (setq-local indent-line-function #'my/markdown-indent-line)
   (setq-local indent-bars-starting-column 0)
   ;; Use custom fill function for better list item handling
