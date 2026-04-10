@@ -14,7 +14,21 @@
  indent-bars-highlight-current-depth nil
  indent-bars-display-on-blank-lines nil)
 
-(add-hook 'prog-mode-hook 'indent-bars-mode)
-(add-hook 'yaml-mode-hook 'indent-bars-mode)
+(add-hook 'prog-mode-hook #'indent-bars-mode)
+(add-hook 'yaml-mode-hook #'indent-bars-mode)
+(add-hook 'markdown-mode-hook #'indent-bars-mode)
+
+;; tree-sitter-hl-mode bypasses indent-bars' font-lock wrapper.
+;; Re-setup indent-bars after tree-sitter-hl-mode so it wraps the
+;; updated fontify function and draws bars after tree-sitter highlights.
+(defun my/indent-bars-reset-after-tree-sitter ()
+  "Re-setup indent-bars after tree-sitter-hl-mode activation."
+  (when (bound-and-true-p indent-bars-mode)
+    (indent-bars-reset)))
+
+(with-eval-after-load 'tree-sitter-hl
+  (add-hook 'tree-sitter-after-on-hook
+            #'my/indent-bars-reset-after-tree-sitter
+            'append))
 
 (provide 'init-indent-bars)

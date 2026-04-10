@@ -305,19 +305,38 @@ appropriate for the specified language instead of HTML comments."
 (with-eval-after-load 'markdown-mode
   (define-key gfm-mode-map (kbd "M-;") #'my/gfm-comment-dwim))
 
-(add-hook  'markdown-mode-hook
-           (lambda ()
-             (auto-fill-mode -1)
-             (visual-line-mode nil)
-             (setq tab-width 2)
-             ;; Use custom fill function for better list item handling
-             (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
-             ;; Clear stale buffer-local overrides from previous config
-             ;; versions so the global electric-pair-inhibit-predicate
-             ;; takes effect.
-             (kill-local-variable 'electric-pair-inhibit-predicate)
-             (kill-local-variable 'electric-pair-skip-self)
-             (kill-local-variable 'electric-pair-pairs)))
+(defun my/markdown-indent-line ()
+  "Cycle indentation in `tab-width' increments.
+When invoked via `markdown-cycle' (Tab key), cycle through
+positions 0, `tab-width', 2*`tab-width', etc.  Otherwise, match
+the previous line indentation for auto-indent."
+  (let* ((max-indent (* 4 tab-width))
+         (cur (current-indentation))
+         (next (if (eq this-command 'markdown-cycle)
+                   (if (>= cur max-indent) 0 (+ cur tab-width))
+                 (or (markdown-prev-line-indent) 0))))
+    (if (<= (current-column) cur)
+        (progn (indent-line-to next)
+               (back-to-indentation))
+      (save-excursion (indent-line-to next)))))
+
+(defun my/markdown-mode-setup ()
+  "Setup for markdown-mode buffers."
+  (auto-fill-mode -1)
+  (visual-line-mode 1)
+  (setq-local tab-width 4)
+  (setq-local indent-line-function #'my/markdown-indent-line)
+  (setq-local indent-bars-starting-column 0)
+  ;; Use custom fill function for better list item handling
+  (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
+  ;; Clear stale buffer-local overrides from previous config
+  ;; versions so the global electric-pair-inhibit-predicate
+  ;; takes effect.
+  (kill-local-variable 'electric-pair-inhibit-predicate)
+  (kill-local-variable 'electric-pair-skip-self)
+  (kill-local-variable 'electric-pair-pairs))
+
+(add-hook 'markdown-mode-hook #'my/markdown-mode-setup)
 
 (defun my/gfm-electric-backtick ()
   "Handle backtick auto-pairing in gfm-mode.

@@ -56,6 +56,9 @@
 ;; https://github.com/paradoxxxzero/jinja2-mode
 ;; (require 'init-jinja2-mode)
 
+;; indent-bars
+(require 'init-indent-bars)
+
 ;; markdown mode
 ;; http://jblevins.org/projects/markdown-mode/
 ;; requirements: gfm preview: https://github.com/Gagle/Node-GFM
@@ -194,9 +197,6 @@
 
 ;; toml-mode
 (require 'init-toml)
-
-;; indent-bars
-;; (require 'init-indent-bars)
 
 ;; dockerfile-mode
 ;; https://github.com/spotify/dockerfile-mode
