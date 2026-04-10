@@ -327,6 +327,7 @@ the previous line indentation for auto-indent."
   (setq-local tab-width 2)
   (setq-local indent-line-function #'my/markdown-indent-line)
   (setq-local indent-bars-starting-column 0)
+  (setq-local indent-bars-spacing-override 2)
   ;; Use custom fill function for better list item handling
   (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
   ;; Clear stale buffer-local overrides from previous config
