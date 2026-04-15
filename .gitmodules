@@ -220,3 +220,6 @@
 [submodule "package/imenu-list"]
 	path = package/imenu-list
 	url = https://github.com/cldotdev/imenu-list.git
+[submodule "package/clipetty"]
+	path = package/clipetty
+	url = https://github.com/spudlyo/clipetty

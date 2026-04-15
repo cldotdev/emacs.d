@@ -17,14 +17,12 @@
 ## Requirements
 
 * emacs >= 30
-* xclip
 * ack
 * r (ESS)
 * texlive (AUCTeX)
 * git (Magit)
 * clisp (SLIME)
-* Python libraries listed in `requirements/python-package.txt` (Python 2)
-and `requirements/python3-package.txt` (Python 3) (Elpy)
+* Python libraries listed in `requirements/python-package.txt` (Python 2) and `requirements/python3-package.txt` (Python 3) (Elpy)
 
 ## Optional requirements
 

@@ -87,11 +87,10 @@
 ;; https://github.com/jorgenschaefer/elpy
 ;; (require 'init-elpy)
 
-;; xclip - an interface to the xclip tool
-;; requirements: xclip
-;; (cond ((eq system-type 'gnu/linux) (require 'init-xclip))
-;;       ((eq system-type 'darwin) (require 'init-osx-clipboard-mode)))
-(cond ((eq system-type 'darwin) (require 'init-osx-clipboard-mode)))
+;; Terminal clipboard integration
+;; gnu/linux: clipetty for OSC 52 based clipboard sync
+;; darwin: osx-clipboard-mode for pbcopy/pbpaste integration
+(require 'init-clipboard)
 
 ;; org mode
 ;; (require 'init-org-mode)
