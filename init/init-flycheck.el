@@ -13,21 +13,27 @@
 ;; https://github.com/flycheck/flycheck/issues/1559#issuecomment-478569550
 (setq flycheck-emacs-lisp-load-path 'inherit)
 
-;; Configure Flycheck to use project Ruby version via mise
+;; Wrap Ruby checkers with `mise x -C <root> -- bundle exec' so the project's
+;; bundled rubocop (and its plugins) runs instead of whatever system rubocop
+;; happens to be on the daemon's PATH.
 (defun my-flycheck-ruby-setup ()
-  "Setup Flycheck to use project Ruby version via mise."
+  "Setup Flycheck to use project Ruby version and gems via mise + bundler."
   (when-let* ((file (buffer-file-name))
-              (project-root (expand-file-name
-                             (locate-dominating-file file "Gemfile"))))
-    (setq-local flycheck-command-wrapper-function
-                (lambda (command)
-                  ;; Use mise x with explicit project directory (-C) to ensure
-                  ;; the correct Ruby version is used
-                  (if (executable-find "mise")
-                      (append (list "mise" "x" "-C" project-root "--") command)
-                    command)))))
+              (root (locate-dominating-file file "Gemfile")))
+    (when (executable-find "mise")
+      (let ((project-root (expand-file-name root)))
+        (setq-local flycheck-command-wrapper-function
+                    (lambda (command)
+                      ;; Flycheck resolves the checker to an absolute path
+                      ;; pinned to the daemon's PATH; strip back to the
+                      ;; basename so `bundle exec' picks the project's gem.
+                      (append (list "mise" "x" "-C" project-root "--"
+                                    "bundle" "exec")
+                              (cons (file-name-nondirectory (car command))
+                                    (cdr command)))))))))
 
-(add-hook 'ruby-mode-hook 'my-flycheck-ruby-setup)
+(dolist (hook '(ruby-mode-hook ruby-ts-mode-hook enh-ruby-mode-hook))
+  (add-hook hook #'my-flycheck-ruby-setup))
 
 ;; Disable shellcheck for .env files since environment variables are
 ;; meant to be sourced externally and SC2034 warnings are false positives
