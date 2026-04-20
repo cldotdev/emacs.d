@@ -1,5 +1,7 @@
 ;;; init-flycheck.el --- Flycheck configuration -*- lexical-binding: t -*-
 
+(declare-function sh-set-shell "sh-script")
+
 (add-to-list 'load-path "~/.emacs.d/package/flycheck")
 (add-to-list 'load-path "~/.emacs.d/package/s.el")
 (add-to-list 'load-path "~/.emacs.d/package/dash.el")
