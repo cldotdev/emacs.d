@@ -36,10 +36,7 @@
                       (end-of-line)
                       (insert first-line-trailing-ws))))))))
 
-;; Use system clipboard instead of kill reagion
-(global-set-key "\C-w" 'clipboard-kill-region)
-(global-set-key "\M-w" 'clipboard-kill-ring-save)
-(global-set-key "\C-y" 'clipboard-yank)
+(setq copy-region-blink-delay 0)
 
 ;; Inhibit startup message
 (setq inhibit-startup-screen t)
