@@ -2,6 +2,17 @@
 (setq initial-scratch-message "")
 (setq initial-major-mode 'text-mode)
 
+;; Copy whole line when no region is active
+(defun kill-ring-save-line-or-region ()
+  "Copy the current line to the kill ring if no region is active.
+Otherwise copy the region as usual."
+  (interactive)
+  (if (use-region-p)
+      (kill-ring-save (region-beginning) (region-end))
+    (copy-region-as-kill (line-beginning-position) (line-beginning-position 2))
+    (message "Copied line")))
+(global-set-key (kbd "M-w") 'kill-ring-save-line-or-region)
+
 ;; Query-replace-regexp
 (global-set-key (kbd "M-#") 'query-replace-regexp)
 
