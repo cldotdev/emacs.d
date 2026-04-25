@@ -247,7 +247,7 @@ the latest existing backup.  Skip empty or oversized files."
 
 ;; Word wrap
 (setq-default truncate-lines t)
-(global-set-key (kbd "C-c g") 'toggle-truncate-lines)
+(global-set-key (kbd "C-c t") 'toggle-truncate-lines)
 
 ;; Enabling font lock
 (if (fboundp 'global-font-lock-mode)
