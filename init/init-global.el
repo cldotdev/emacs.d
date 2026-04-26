@@ -305,20 +305,24 @@ the latest existing backup.  Skip empty or oversized files."
 (global-set-key (kbd "M-;") 'comment-dwim-line)
 
 ;; Electric pair mode
-(when (fboundp 'electric-pair-mode)
-  (electric-pair-mode))
-;; Don't pair quotes in electric-pair-mode
-;; (setq electric-pair-inhibit-predicate
-;;       (lambda (c)
-;;         (if (char-equal c ?\") t (electric-pair-default-inhibit c))))
+(require 'elec-pair)
+(electric-pair-mode)
 (setq electric-pair-skip-whitespace nil)
 
 (setq electric-pair-inhibit-predicate
       (lambda (c)
         (or (minibufferp)
-            ;; Don't auto-pair when the preceding char is the same,
-            ;; e.g. typing " after " or ` after `.
-            (eq (char-before (1- (point))) c))))
+            ;; Never auto-pair " in any mode.
+            (eq c ?\")
+            (electric-pair-conservative-inhibit c))))
+
+;; Drop ASCII " from the unconditional-pair tables; otherwise in modes where
+;; " has punctuation syntax (text-mode, markdown-mode) it would bypass
+;; `electric-pair-inhibit-predicate' and always pair.
+(setq electric-pair-pairs
+      (remove '(?\" . ?\") electric-pair-pairs))
+(setq electric-pair-text-pairs
+      (remove '(?\" . ?\") electric-pair-text-pairs))
 
 ;; Joins the current line and the previous line, by deleting a newline
 ;; and all surrounding spaces, usually leaving a single space.
