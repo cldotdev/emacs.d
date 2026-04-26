@@ -484,4 +484,19 @@ Prevents backward word motion from skipping across Latin/CJK transitions."
 ;; This prevents Emacs from freezing when using emacsclient with Git operations
 (setq vc-handled-backends nil)
 
+;; Silently discard stray CSI ? (private mode) terminal responses that
+;; tmux may relay during session switches, preventing garbage text and
+;; unwanted Help buffers.
+(add-hook 'terminal-init-xterm-hook
+          (lambda ()
+            (when (getenv "TMUX")
+              (define-key input-decode-map "\e[?"
+                (lambda (_prompt)
+                  (let (ch)
+                    (while (and (setq ch (read-event nil nil 0.1))
+                                (not (and (characterp ch) (<= ?@ ch ?~))))
+                      (unless (characterp ch)
+                        (push ch unread-command-events))))
+                  [])))))
+
 (provide 'init-global)
