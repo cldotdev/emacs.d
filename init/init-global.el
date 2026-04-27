@@ -309,20 +309,40 @@ the latest existing backup.  Skip empty or oversized files."
 (electric-pair-mode)
 (setq electric-pair-skip-whitespace nil)
 
+(defun my/electric-pair--free-char-p (ch)
+  "Non-nil if CH is a buffer boundary, physical whitespace, or paren.
+Checked by literal whitespace because in many prog modes (Ruby,
+Python, shell) `\\n' has comment-end syntax (?>), not whitespace."
+  (or (null ch)
+      (memq ch '(?\s ?\t ?\n ?\r))
+      (memq (char-syntax ch) '(?\( ?\)))))
+
+(defun my/electric-pair--quote-isolated-p ()
+  "Non-nil when the just-typed `\"' should auto-pair.
+The predicate runs after `self-insert-command' inserts `\"', so
+look one character further back to see the original neighbour."
+  (and (my/electric-pair--free-char-p (char-before (1- (point))))
+       (my/electric-pair--free-char-p (char-after))))
+
 (setq electric-pair-inhibit-predicate
       (lambda (c)
-        (or (minibufferp)
-            ;; Never auto-pair " in any mode.
-            (eq c ?\")
+        (or (and (eq c ?\")
+                 (not (my/electric-pair--quote-isolated-p)))
+            (minibufferp)
             (electric-pair-conservative-inhibit c))))
 
-;; Drop ASCII " from the unconditional-pair tables; otherwise in modes where
-;; " has punctuation syntax (text-mode, markdown-mode) it would bypass
-;; `electric-pair-inhibit-predicate' and always pair.
-(setq electric-pair-pairs
-      (remove '(?\" . ?\") electric-pair-pairs))
-(setq electric-pair-text-pairs
-      (remove '(?\" . ?\") electric-pair-text-pairs))
+(defun my/electric-pair--quote-conditional (info)
+  "Force the UNCONDITIONAL flag off for `\"'.
+In text-mode / markdown-mode `\"' has punctuation syntax, so
+pairing goes through `electric-pair-text-pairs' whose flag
+bypasses `electric-pair-inhibit-predicate'.  Clearing the flag
+keeps the predicate authoritative across all modes.
+INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
+  (when (and info (eq (nth 1 info) ?\"))
+    (setf (nth 2 info) nil))
+  info)
+(advice-add 'electric-pair-syntax-info :filter-return
+            #'my/electric-pair--quote-conditional)
 
 ;; Joins the current line and the previous line, by deleting a newline
 ;; and all surrounding spaces, usually leaving a single space.
