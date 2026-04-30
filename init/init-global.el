@@ -437,7 +437,11 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
 ;; Disable the menu bar
 (menu-bar-mode -1)
 
-;; Disable backslash character in line wrapping
+;; Disable backslash character in line wrapping.
+;; `standard-display-table' is nil until something populates it, so
+;; create an empty one first when needed.
+(unless standard-display-table
+  (setq standard-display-table (make-display-table)))
 (set-display-table-slot standard-display-table 'wrap ?\ )
 
 ;; Move cursor by camelCase
