@@ -34,9 +34,6 @@
 [submodule "package/Highlight-Indentation-for-Emacs"]
 	path = package/Highlight-Indentation-for-Emacs
 	url = https://github.com/antonj/Highlight-Indentation-for-Emacs.git
-[submodule "package/company-mode"]
-	path = package/company-mode
-	url = https://github.com/company-mode/company-mode.git
 [submodule "package/elpy"]
 	path = package/elpy
 	url = https://github.com/jorgenschaefer/elpy.git
@@ -196,12 +193,6 @@
 [submodule "package/llama"]
 	path = package/llama
 	url = https://github.com/tarsius/llama.git
-[submodule "package/tabnine"]
-	path = package/tabnine
-	url = https://github.com/shuxiao9058/tabnine
-[submodule "package/emacs-language-id"]
-	path = package/emacs-language-id
-	url = https://github.com/lassik/emacs-language-id.git
 [submodule "package/popup-el"]
 	path = package/popup-el
 	url = https://github.com/auto-complete/popup-el.git
@@ -223,3 +214,15 @@
 [submodule "package/clipetty"]
 	path = package/clipetty
 	url = https://github.com/spudlyo/clipetty
+[submodule "package/corfu"]
+	path = package/corfu
+	url = https://github.com/minad/corfu.git
+[submodule "package/cape"]
+	path = package/cape
+	url = https://github.com/minad/cape.git
+[submodule "package/popon"]
+	path = package/popon
+	url = https://codeberg.org/akib/emacs-popon.git
+[submodule "package/corfu-terminal"]
+	path = package/corfu-terminal
+	url = https://codeberg.org/akib/emacs-corfu-terminal.git

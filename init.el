@@ -39,10 +39,12 @@
 ;; yasnippet
 ;; (require 'init-yasnippet)
 
-;; company-mode
-;; Modular in-buffer completion framework for Emacs
-;; http://company-mode.github.io/
-(require 'init-company-mode)
+;; corfu
+;; Compact inline completion popup; uses popon in terminal Emacs to
+;; avoid the line-number / wide-CJK display artifacts caused by
+;; company-pseudo-tooltip's overlay-based popup.
+;; https://github.com/minad/corfu
+(require 'init-corfu)
 
 ;; Magit - an emacs mode for interacting with the Git version control system
 ;; http://magit.github.io/magit/index.html
@@ -238,10 +240,6 @@
 ;; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
 ;; https://github.com/Fuco1/smartparens
 ;; (require 'init-smartparens)
-
-;; tabnine
-;; https://github.com/shuxiao9058/tabnine
-(require 'init-tabnine)
 
 ;; dumb-jump
 ;; an Emacs "jump to definition" package for 50+ languages
