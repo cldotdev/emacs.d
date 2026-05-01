@@ -21,6 +21,8 @@
 (require 'cape)
 (require 'cape-keyword)
 (require 'dabbrev)
+(require 'project)
+(require 'seq)
 
 (declare-function corfu-terminal-mode "corfu-terminal" (&optional arg))
 
@@ -28,7 +30,7 @@
 ;; redraws in check on large buffers; corfu-count / corfu-min-width
 ;; shrink each redraw further.
 (setq corfu-auto t
-      corfu-auto-delay 0.2
+      corfu-auto-delay 0
       corfu-auto-prefix 1
       corfu-count 5
       corfu-min-width 10
@@ -52,9 +54,16 @@
 (setq dabbrev-case-replace nil
       dabbrev-case-fold-search nil)
 
-;; Restrict cape-dabbrev to the current buffer to avoid scanning all
-;; same-mode buffers on every keystroke.
-(setq cape-dabbrev-buffer-function #'current-buffer)
+;; Scope cape-dabbrev to file-visiting buffers in the current project
+;; instead of all same-mode buffers (cape default).  Falls back to the
+;; current buffer when point is not inside a project.
+(defun init-corfu--dabbrev-project-buffers ()
+  "Return file-visiting buffers under the current project root."
+  (if-let* ((proj (project-current)))
+      (seq-filter #'buffer-file-name (project-buffers proj))
+    (list (current-buffer))))
+
+(setq cape-dabbrev-buffer-function #'init-corfu--dabbrev-project-buffers)
 
 ;; In terminal Emacs, render the popup with popon instead of a child frame.
 (unless (display-graphic-p)
