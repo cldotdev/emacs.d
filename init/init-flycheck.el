@@ -15,27 +15,81 @@
 ;; https://github.com/flycheck/flycheck/issues/1559#issuecomment-478569550
 (setq flycheck-emacs-lisp-load-path 'inherit)
 
+(defvar my-flycheck-ruby-project-cache (make-hash-table :test 'equal))
+
+;; `mise where ruby' exits non-zero when the version is not installed and
+;; never triggers an on-demand install, unlike `mise x' or `mise current'.
+(defun my-flycheck-ruby-project-ready-p (root)
+  "Return non-nil if mise reports Ruby installed for ROOT.
+Result is cached per project for the rest of the Emacs session."
+  (let* ((key (expand-file-name root))
+         (cached (gethash key my-flycheck-ruby-project-cache 'unset)))
+    (if (not (eq cached 'unset))
+        cached
+      (let* ((default-directory key)
+             (ready (eq 0 (call-process "mise" nil nil nil "where" "ruby"))))
+        (puthash key ready my-flycheck-ruby-project-cache)
+        ready))))
+
 ;; Wrap Ruby checkers with `mise x -C <root> -- bundle exec' so the project's
 ;; bundled rubocop (and its plugins) runs instead of whatever system rubocop
-;; happens to be on the daemon's PATH.
+;; happens to be on the daemon's PATH.  Skip rubocop entirely when mise has
+;; no Ruby installed, otherwise the wrapped subprocess blocks Emacs trying
+;; to install on demand.  `--server' keeps a rubocop daemon hot for ~10x
+;; faster checks; the daemon detaches via `Process.daemon' so it survives
+;; Emacs daemon restarts.
 (defun my-flycheck-ruby-setup ()
   "Setup Flycheck to use project Ruby version and gems via mise + bundler."
+  ;; Skip `idle-change' / `new-line' triggers so typing pauses do not spawn
+  ;; `mise x -- bundle exec rubocop' (~700ms-2s per invocation).
+  (setq-local flycheck-check-syntax-automatically '(save mode-enabled))
   (when-let* ((file (buffer-file-name))
               (root (locate-dominating-file file "Gemfile")))
-    (when (executable-find "mise")
+    (cond
+     ((not (executable-find "mise")) nil)
+     ((not (my-flycheck-ruby-project-ready-p root))
+      (setq-local flycheck-disabled-checkers
+                  (cons 'ruby-rubocop flycheck-disabled-checkers))
+      (message "flycheck: mise has no Ruby for %s, rubocop disabled" root))
+     (t
       (let ((project-root (expand-file-name root)))
         (setq-local flycheck-command-wrapper-function
                     (lambda (command)
-                      ;; Flycheck resolves the checker to an absolute path
-                      ;; pinned to the daemon's PATH; strip back to the
-                      ;; basename so `bundle exec' picks the project's gem.
-                      (append (list "mise" "x" "-C" project-root "--"
-                                    "bundle" "exec")
-                              (cons (file-name-nondirectory (car command))
-                                    (cdr command)))))))))
+                      (let* ((bin (file-name-nondirectory (car command)))
+                             (extra (and (string= bin "rubocop") '("--server"))))
+                        `("mise" "x" "-C" ,project-root "--"
+                          "bundle" "exec" ,bin ,@extra ,@(cdr command))))))))))
 
 (dolist (hook '(ruby-mode-hook ruby-ts-mode-hook enh-ruby-mode-hook))
   (add-hook hook #'my-flycheck-ruby-setup))
+
+(defun my-rubocop--stop-server-in (root)
+  "Send `rubocop --stop-server' for the project at ROOT (fire-and-forget)."
+  (let ((default-directory root))
+    (start-process "rubocop-stop-server" nil "mise" "x" "--"
+                   "bundle" "exec" "rubocop" "--stop-server")))
+
+(defun my-rubocop-stop-server-here ()
+  "Stop the rubocop server for the current buffer's project."
+  (interactive)
+  (if-let* ((file (buffer-file-name))
+            (root (locate-dominating-file file "Gemfile")))
+      (progn
+        (my-rubocop--stop-server-in root)
+        (message "rubocop --stop-server sent for %s" root))
+    (user-error "No Gemfile found for current buffer")))
+
+(defun my-rubocop-stop-all-servers ()
+  "Stop rubocop servers for every project touched in this session."
+  (interactive)
+  (let ((count 0))
+    (maphash
+     (lambda (root ready)
+       (when ready
+         (my-rubocop--stop-server-in root)
+         (setq count (1+ count))))
+     my-flycheck-ruby-project-cache)
+    (message "rubocop --stop-server sent for %d project(s)" count)))
 
 ;; Disable shellcheck for .env files since environment variables are
 ;; meant to be sourced externally and SC2034 warnings are false positives
