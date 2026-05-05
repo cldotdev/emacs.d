@@ -25,6 +25,8 @@
 (require 'seq)
 
 (declare-function corfu-terminal-mode "corfu-terminal" (&optional arg))
+(declare-function corfu--popup-hide "corfu" ())
+(defvar corfu-terminal--last-position)
 
 (setq corfu-auto t
       corfu-auto-delay 0
@@ -116,8 +118,16 @@
 
 (setq cape-dabbrev-buffer-function #'init-corfu--dabbrev-project-buffers)
 
+(defun init-corfu--hide-terminal-popup-before-exhibit (&rest _)
+  "Hide stale corfu-terminal popup before Corfu measures point position."
+  (when (bound-and-true-p corfu-terminal-mode)
+    (setq corfu-terminal--last-position nil)
+    (corfu--popup-hide)))
+
 (unless (display-graphic-p)
   (require 'corfu-terminal)
+  (advice-add 'corfu--exhibit
+              :before #'init-corfu--hide-terminal-popup-before-exhibit)
   (corfu-terminal-mode 1))
 
 ;; Disable in magit-status.
