@@ -126,7 +126,7 @@ link in the `interprogram-cut-function' chain; STRING is the kill text."
 (unless (advice-member-p #'my/clipetty-cut-coalesce 'clipetty-cut)
   (advice-add 'clipetty-cut :around #'my/clipetty-cut-coalesce))
 
-(unless (display-graphic-p)
+(unless (or noninteractive (display-graphic-p))
   (global-clipetty-mode 1))
 
 (provide 'init-clipetty)
