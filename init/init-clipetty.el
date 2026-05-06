@@ -38,20 +38,9 @@
             (when (= (length clients) 1)
               (car clients))))))))
 
-;; Cache the resolved tmux client tty per pane so each kill no longer
-;; spawns 1-3 synchronous tmux subprocesses.
-(defvar my/clipetty--tty-cache (make-hash-table :test 'equal))
-
-(defun my/clipetty-flush-tty-cache (&optional frame &rest _)
-  "Invalidate cached tmux client ttys for FRAME, or all entries when nil."
-  (interactive)
-  (if (framep frame)
-      (when-let ((pane (getenv "TMUX_PANE" frame)))
-        (remhash pane my/clipetty--tty-cache))
-    (clrhash my/clipetty--tty-cache)))
-
-(add-hook 'after-make-frame-functions #'my/clipetty-flush-tty-cache)
-(add-hook 'delete-frame-functions #'my/clipetty-flush-tty-cache)
+;; Resolve fresh each emit: tmux client detach/reattach is invisible to
+;; Emacs, so any cached tty can outlive its pts and write to a recycled
+;; or vanished device.
 
 (defun my/clipetty-tty (orig-fun ssh-tty tmux)
   "Advice around `clipetty--tty' (ORIG-FUN SSH-TTY TMUX) to use the frame's tmux client."
@@ -59,13 +48,10 @@
            (let ((pane (getenv "TMUX_PANE" (selected-frame)))
                  (tmux-env (getenv "TMUX" (selected-frame))))
              (when (and pane tmux-env)
-               (or (gethash pane my/clipetty--tty-cache)
-                   (let ((process-environment (copy-sequence process-environment)))
-                     (setenv "TMUX" tmux-env)
-                     (when-let ((tty (or (my/clipetty-frame-client-tty pane)
-                                         (my/clipetty-frame-single-client-tty pane))))
-                       (puthash pane tty my/clipetty--tty-cache)
-                       tty))))))
+               (let ((process-environment (copy-sequence process-environment)))
+                 (setenv "TMUX" tmux-env)
+                 (or (my/clipetty-frame-client-tty pane)
+                     (my/clipetty-frame-single-client-tty pane))))))
       (funcall orig-fun ssh-tty tmux)))
 
 (unless (advice-member-p #'my/clipetty-tty 'clipetty--tty)
