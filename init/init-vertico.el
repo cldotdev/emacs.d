@@ -11,6 +11,8 @@
 
 ;; Enable vertico-grid for multi-column display
 (require 'vertico-grid)
+;; Allow grid to fall back to a single column on narrow frames.
+(setq vertico-grid-min-columns 1)
 (vertico-grid-mode 1)
 
 ;; Ido-like directory navigation for Vertico
