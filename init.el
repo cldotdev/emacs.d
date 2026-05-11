@@ -179,6 +179,9 @@
 ;; js-mode js2-mode
 ;; (require 'init-js-mode)
 
+;; Modern JS/TS via Emacs 30 built-in treesit
+(require 'init-js-ts)
+
 ;; go-mode
 (require 'init-go-mode)
 (require 'init-go-mod-mode)

@@ -10,7 +10,6 @@
 (add-to-list 'auto-mode-alist '("\\.djhtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jinja?\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.[tj]s[x]?$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.mako$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.svelte\\'" . web-mode))
