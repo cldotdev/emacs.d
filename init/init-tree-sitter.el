@@ -13,6 +13,11 @@
 
 (global-tree-sitter-mode)
 (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+;; Only register modes that do NOT have a built-in `*-ts-mode' replacement
+;; in this config. Languages already routed to treesit (bash, css, go, java,
+;; javascript/typescript/tsx, json, python, ruby, sh, yaml, dockerfile) are
+;; intentionally omitted -- their buffers use `*-ts-mode' which is driven by
+;; the built-in `treesit' API, not by elisp-tree-sitter.
 (setq tree-sitter-major-mode-language-alist '((actionscript-mode . actionscript)
                                               (ada-mode . ada)
                                               (agda-mode . agda)
@@ -25,7 +30,6 @@
                                               (masm-mode . asm)
                                               (nasm-mode . asm)
                                               (gas-mode . asm)
-                                              (sh-mode . bash)
                                               (beancount-mode . beancount)
                                               (bibtex-mode . bibtex)
                                               (c-mode . c)
@@ -38,8 +42,6 @@
                                               (cmake-mode . cmake)
                                               (d-mode . d)
                                               (dart-mode . dart)
-                                              ;; (dockerfile-mode . dockerfile)
-                                              (css-mode . css)
                                               (csv-mode . csv)
                                               (elm-mode . elm)
                                               (elixir-mode . elixir)
@@ -56,7 +58,6 @@
                                               (gitignore-mode . gitignore)
                                               (gleam-mode . gleam)
                                               (glsl-mode . glsl)
-                                              (go-mode . go)
                                               (groovy-mode . groovy)
                                               (jenkinsfile-mode . groovy)
                                               (haskell-mode . haskell)
@@ -70,13 +71,6 @@
                                               (mhtml-mode . html)
                                               (nix-mode . nix)
                                               (jai-mode . jai)
-                                              (java-mode . java)
-                                              (javascript-mode . javascript)
-                                              (js-mode . javascript)
-                                              (js2-mode . javascript)
-                                              (js3-mode . javascript)
-                                              (json-mode . json)
-                                              (jsonc-mode . json)
                                               (jsonnet-mode . jsonnet)
                                               (julia-mode . julia)
                                               (kotlin-mode . kotlin)
@@ -103,12 +97,9 @@
                                               (php-mode . php)
                                               (qss-mode . css)
                                               (prisma-mode . prisma)
-                                              (python-mode . python)
                                               (pygn-mode . pgn)
                                               (racket-mode . racket)
-                                              (rjsx-mode . javascript)
                                               (rst-mode . rst)
-                                              (ruby-mode . ruby)
                                               (rust-mode . rust)
                                               (rustic-mode . rust)
                                               (scala-mode . scala)
@@ -124,23 +115,11 @@
                                               (tcl-mode . tcl)
                                               (tuareg-mode . ocaml)
                                               (twig-mode . twig)
-                                              (typescript-mode . typescript)
-                                              (typescript-tsx-mode . tsx)
                                               (typst-mode . typst)
                                               (verilog-mode . verilog)
                                               (vhdl-mode . vhdl)
                                               (nxml-mode . xml)
-                                              (yaml-mode . yaml)
                                               (k8s-mode . yaml)
                                               (zig-mode . zig)))
-
-;; ts-fold
-;; https://github.com/emacs-tree-sitter/ts-fold
-(add-to-list 'load-path "~/.emacs.d/package/fringe-helper.el")
-(add-to-list 'load-path "~/.emacs.d/package/ts-fold")
-(require 'ts-fold-indicators)
-(require 'ts-fold)
-
-(global-set-key (kbd "C-c f") 'ts-fold-toggle)
 
 (provide 'init-tree-sitter)

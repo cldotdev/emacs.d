@@ -85,9 +85,12 @@
 ;; https://github.com/winterTTr/ace-jump-mode
 ;; (require 'init-ace-jump-mode)
 
-;; Elpy - the Emacs Lisp Python Environment
-;; https://github.com/jorgenschaefer/elpy
-;; (require 'init-elpy)
+;; Tree-sitter grammar repos / pinned revisions (single source of truth,
+;; consumed by both interactive Emacs and `make grammars').
+(require 'init-treesit-grammars)
+
+;; Eglot (LSP) - built into Emacs 30. Wires pyright for python-ts-mode.
+(require 'init-eglot)
 
 ;; Terminal clipboard integration
 ;; gnu/linux: clipetty for OSC 52 based clipboard sync
