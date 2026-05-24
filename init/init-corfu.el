@@ -59,9 +59,12 @@
 (advice-add 'corfu--compute :around #'init-corfu--compute-advice)
 
 ;; Free C-n / C-p / C-a for buffer navigation while the popup is open;
-;; navigate the popup with M-n / M-p instead.
+;; navigate the popup with M-n / M-p (or M-j / M-k) instead.
 (define-key corfu-map (kbd "M-n") #'corfu-next)
 (define-key corfu-map (kbd "M-p") #'corfu-previous)
+;; M-j / M-k mirror M-n / M-p: j = down (next), k = up (previous).
+(define-key corfu-map (kbd "M-j") #'corfu-next)
+(define-key corfu-map (kbd "M-k") #'corfu-previous)
 (keymap-unset corfu-map "<remap> <next-line>" t)
 (keymap-unset corfu-map "<remap> <previous-line>" t)
 (keymap-unset corfu-map "<remap> <move-beginning-of-line>" t)
