@@ -15,6 +15,13 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (setq markdown-gfm-use-electric-backquote nil)
   (define-key markdown-mode-map (kbd "<backtab>") 'markdown-promote)
   (define-key markdown-mode-map (kbd "RET") #'my/markdown-insert-list-item-on-enter)
+  ;; Compress table padding for narrow-screen reading.  In a terminal
+  ;; C-c TAB is read as C-c C-i, which shadows the default
+  ;; markdown-insert-image, so rebind that to C-c C-x i (next to the
+  ;; existing C-c C-x C-i image toggle) to keep it available.
+  (define-key markdown-mode-map (kbd "C-c TAB") #'my/markdown-table-compress)
+  (define-key markdown-mode-map (kbd "C-c |") #'my/markdown-table-compress-buffer)
+  (define-key markdown-mode-map (kbd "C-c C-x i") #'markdown-insert-image)
   ;; Ensure syntax-propertize runs before imenu scans, so that
   ;; markdown-code-block-at-point-p correctly detects fenced code blocks.
   (advice-add 'markdown-imenu-create-nested-index
@@ -377,5 +384,80 @@ a ``` fence is formed."
             (remove-hook 'post-self-insert-hook #'gfm--electric-pair-fence-code-block t)
             ;; (add-hook 'post-self-insert-hook #'my/gfm-electric-backtick 'append t)
             ))
+
+(defun my/markdown-table-compress ()
+  "Compress the table at point by stripping alignment padding.
+Each cell keeps a single surrounding space and the delimiter row is
+reduced to a minimal form, while column alignment markers (`:') are
+preserved.  This makes wide aligned tables more compact for reading on
+narrow screens.
+
+Note: cells are not padded to a common column width, so each row is
+only as wide as its own content.  Pressing Tab inside the table
+re-aligns it unless `markdown-table-align-p' is nil."
+  (interactive)
+  (unless (markdown-table-at-point-p)
+    (user-error "Not at a table"))
+  (let ((begin (markdown-table-begin))
+        (end (copy-marker (markdown-table-end))))
+    (markdown-table-save-cell
+     (goto-char begin)
+     (let* ((indent (progn (looking-at "[ \t]*") (match-string 0)))
+            fmtspec
+            (lines (mapcar (lambda (line)
+                             (if (markdown--is-delimiter-row line)
+                                 (progn (setq fmtspec (or fmtspec line)) nil)
+                               line))
+                           (markdown--split-string
+                            (buffer-substring begin end) "\n")))
+            (cells (mapcar #'markdown--table-line-to-columns (remq nil lines)))
+            (maxcells (if cells
+                          (apply #'max (mapcar #'length cells))
+                        (user-error "Empty table")))
+            (emptycells (make-list maxcells ""))
+            (fmts (markdown-table-colfmt fmtspec))
+            ;; Minimal delimiter row, keeping each column's alignment.
+            (hline (concat
+                    indent "|"
+                    (mapconcat
+                     (lambda (i)
+                       (let ((f (nth i fmts)))
+                         (cond ((eq f 'l) ":--")
+                               ((eq f 'r) "--:")
+                               ((eq f 'c) ":-:")
+                               (t "---"))))
+                     (number-sequence 0 (1- maxcells))
+                     "|")
+                    "|")))
+       (dolist (line lines)
+         (let ((new (if line
+                        (let ((row (seq-take
+                                    (append (pop cells) emptycells)
+                                    maxcells)))
+                          (concat indent "| "
+                                  (mapconcat #'string-trim row " | ")
+                                  " |"))
+                      hline))
+               (previous (buffer-substring-no-properties (point) (line-end-position))))
+           (if (equal previous new)
+               (forward-line)
+             (insert new "\n")
+             (delete-region (point) (line-beginning-position 2)))))
+       (set-marker end nil)))))
+
+(defun my/markdown-table-compress-buffer ()
+  "Compress every Markdown table in the current buffer.
+See `my/markdown-table-compress'."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((count 0))
+      (while (not (eobp))
+        (when (markdown-table-at-point-p)
+          (my/markdown-table-compress)
+          (setq count (1+ count))
+          (goto-char (markdown-table-end)))
+        (forward-line 1))
+      (message "Compressed %d table(s)" count))))
 
 (provide 'init-markdown-mode)
