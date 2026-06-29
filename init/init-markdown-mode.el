@@ -387,10 +387,10 @@ a ``` fence is formed."
 
 (defun my/markdown-table-compress ()
   "Compress the table at point by stripping alignment padding.
-Each cell keeps a single surrounding space and the delimiter row is
-reduced to a minimal form, while column alignment markers (`:') are
-preserved.  This makes wide aligned tables more compact for reading on
-narrow screens.
+Each non-empty cell keeps a single space on each side, while an empty
+cell becomes a single space.  The delimiter row is reduced to a
+minimal form, and column alignment markers (`:') are preserved.  This
+makes wide aligned tables more compact for reading on narrow screens.
 
 Note: cells are not padded to a common column width, so each row is
 only as wide as its own content.  Pressing Tab inside the table
@@ -434,9 +434,15 @@ re-aligns it unless `markdown-table-align-p' is nil."
                         (let ((row (seq-take
                                     (append (pop cells) emptycells)
                                     maxcells)))
-                          (concat indent "| "
-                                  (mapconcat #'string-trim row " | ")
-                                  " |"))
+                          (concat indent "|"
+                                  (mapconcat
+                                   (lambda (c)
+                                     (let ((c (string-trim c)))
+                                       (if (string-empty-p c)
+                                           " "
+                                         (concat " " c " "))))
+                                   row "|")
+                                  "|"))
                       hline))
                (previous (buffer-substring-no-properties (point) (line-end-position))))
            (if (equal previous new)
