@@ -97,6 +97,12 @@
 ;; darwin: osx-clipboard-mode for pbcopy/pbpaste integration
 (require 'init-clipboard)
 
+;; Emacs server integration
+;; Temp files visited via emacsclient adopt the caller's working
+;; directory, so relative path completion works in e.g. Claude Code
+;; ctrl-g prompt files.
+(require 'init-server)
+
 ;; org mode
 ;; (require 'init-org-mode)
 

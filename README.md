@@ -10,6 +10,8 @@
 - Git (Magit)
 - Completion (Corfu)
 - On-the-fly syntax checks (Flycheck)
+- Emacsclient temp files adopt the caller's working directory, so
+  relative path completion works in e.g. Claude Code prompt files
 - Tree-sitter grammars pinned in `init/init-treesit-grammars.el`
 
 ## Requirements
