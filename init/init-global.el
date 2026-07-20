@@ -437,12 +437,21 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
 ;; Disable the menu bar
 (menu-bar-mode -1)
 
-;; Disable backslash character in line wrapping.
+;; Customize the wrap and truncation markers.
 ;; `standard-display-table' is nil until something populates it, so
 ;; create an empty one first when needed.
 (unless standard-display-table
   (setq standard-display-table (make-display-table)))
+;; Hide the backslash shown at the end of a wrapped line.
 (set-display-table-slot standard-display-table 'wrap ?\ )
+;; Dim the truncation marker and shape it like the arrow that graphical
+;; frames draw in the fringe. This slot applies to terminal frames only.
+;; Emacs gives the marker no face of its own, so attach one through the
+;; glyph code. U+25B8 stays one column wide in every language environment,
+;; unlike the arrow characters classified as East Asian Ambiguous.
+(set-display-table-slot
+ standard-display-table 'truncation
+ (make-glyph-code ?\N{BLACK RIGHT-POINTING SMALL TRIANGLE} 'shadow))
 
 ;; Move cursor by camelCase
 (global-subword-mode 1)

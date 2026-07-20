@@ -24,8 +24,7 @@
 
 ;; Nord theme
 ;; https://github.com/arcticicestudio/nord-emacs
-(add-to-list 'load-path "~/.emacs.d/package/nord-emacs")
-(require 'nord-theme)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/package/nord-emacs")
 
 (if (daemonp)
     (add-hook 'after-make-frame-functions
