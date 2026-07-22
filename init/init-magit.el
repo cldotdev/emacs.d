@@ -23,6 +23,19 @@
 ;; files in magit that are accessed through symlinks.
 (setq find-file-suppress-same-file-warnings t)
 
+;; Keep the regular region overlay when the region is a valid Magit
+;; selection (sibling sections or a hunk-internal region).  By default
+;; Magit hides the overlay there, which leaves multi-line selections
+;; with no visible highlight when copying text.  Section commands still
+;; act on whole lines or sections, not on the exact region.
+(setq magit-section-keep-region-overlay t)
+
+;; With the region overlay kept above, Magit's own selection styling is
+;; redundant: do not recolor the headings of selected sections, and do
+;; not embolden the selected hunk lines nor dim the rest of the hunk.
+(setq magit-section-highlight-selection nil)
+(setq magit-diff-highlight-hunk-region-functions nil)
+
 ;; Custom function to follow symlinks when calling magit-status
 (defun my/magit-status-follow-symlink ()
   "Call magit-status, following symlinks to their real path.
