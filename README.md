@@ -10,6 +10,7 @@
 - Git (Magit)
 - Completion (Corfu)
 - On-the-fly syntax checks (Flycheck)
+- Ordered Markdown lists renumber themselves as items are added or removed
 - Emacsclient temp files adopt the caller's working directory, so
   relative path completion works in e.g. Claude Code prompt files
 - Tree-sitter grammars pinned in `init/init-treesit-grammars.el`

@@ -103,6 +103,142 @@ Text after cursor is moved to the new line."
      (t
       (newline-and-indent)))))
 
+(defconst my/markdown-list-item-regexp
+  "^[ \t]*\\(?:[0-9]+[.)]\\|[-*+]\\)[ \t]"
+  "Regexp matching the marker of an ordered or unordered list item.")
+
+(defconst my/markdown-ordered-list-item-regexp
+  "^[ \t]*\\([0-9]+\\)[.)][ \t]"
+  "Regexp matching an ordered list item marker.
+The item number is group 1.")
+
+(defconst my/markdown-code-fence-regexp
+  "^[ \t]*\\(?:```\\|~~~\\)"
+  "Regexp matching a fenced code block delimiter.")
+
+(defvar my/markdown-renumber-inhibit-commands
+  '(undo undo-only undo-redo undo-tree-undo undo-tree-redo)
+  "Commands after which the list at point is left alone.
+Renumbering after an undo would immediately reapply the very change
+the undo just reverted.")
+
+(defvar-local my/markdown-renumber-tick nil
+  "Value of `buffer-chars-modified-tick' at the last renumber check.")
+
+(defun my/markdown-list-item-line-p ()
+  "Return non-nil when the current line starts a list item.
+Point must be at the beginning of the line."
+  (and (looking-at-p my/markdown-list-item-regexp)
+       (not (looking-at-p markdown-regex-hr))))
+
+(defun my/markdown-list-bounds ()
+  "Return the bounds of the list around point as (BEGIN . END).
+Return nil unless point is on a list item line.  The list stops at a
+code fence, at an unindented line that is not a list item, and at two
+consecutive blank lines, so a list interrupted by a code block or a
+paragraph counts as two separate lists."
+  (save-excursion
+    (beginning-of-line)
+    (when (my/markdown-list-item-line-p)
+      (let ((begin (point))
+            (end (line-end-position)))
+        (save-excursion
+          (let ((blanks 0)
+                (scanning t))
+            (while (and scanning (= 0 (forward-line -1)))
+              (cond
+               ((looking-at-p my/markdown-code-fence-regexp)
+                (setq scanning nil))
+               ((looking-at-p "^[ \t]*$")
+                (setq blanks (1+ blanks))
+                (when (> blanks 1) (setq scanning nil)))
+               ((my/markdown-list-item-line-p)
+                (setq begin (point)
+                      blanks 0))
+               ;; Indented text continues the item above.
+               ((> (current-indentation) 0)
+                (setq blanks 0))
+               (t (setq scanning nil))))))
+        (save-excursion
+          (let ((blanks 0)
+                (scanning t))
+            (while (and scanning (= 0 (forward-line 1)))
+              (cond
+               ((looking-at-p my/markdown-code-fence-regexp)
+                (setq scanning nil))
+               ((looking-at-p "^[ \t]*$")
+                (setq blanks (1+ blanks))
+                (when (> blanks 1) (setq scanning nil)))
+               ((or (my/markdown-list-item-line-p)
+                    (> (current-indentation) 0))
+                (setq end (line-end-position)
+                      blanks 0))
+               (t (setq scanning nil))))))
+        (cons begin end)))))
+
+(defun my/markdown-renumber-list-at-point ()
+  "Renumber the ordered items of the list around point.
+Each indentation level is numbered on its own, starting from the number
+of its first item, so a list that deliberately picks up at `4.' keeps
+its offset.  Changing the first item is therefore the way to renumber
+the whole list.
+
+Items that already carry the right number are left untouched, so a list
+in good shape triggers no buffer modification, no undo entry, and no
+modified flag."
+  (interactive)
+  (let ((bounds (my/markdown-list-bounds)))
+    (when bounds
+      (save-excursion
+        (let ((end (copy-marker (cdr bounds)))
+              ;; Alist of (INDENT . LAST-NUMBER), deepest level first.
+              (levels nil))
+          (goto-char (car bounds))
+          (beginning-of-line)
+          (while (< (point) end)
+            (let ((indent (current-indentation)))
+              (cond
+               ((looking-at my/markdown-ordered-list-item-regexp)
+                (while (and levels (> (caar levels) indent))
+                  (pop levels))
+                (let* ((number (if (and levels (= (caar levels) indent))
+                                   (setcdr (car levels) (1+ (cdar levels)))
+                                 ;; A level opens on the number of its
+                                 ;; own first item.
+                                 (cdar (push (cons indent
+                                                   (string-to-number
+                                                    (match-string 1)))
+                                             levels))))
+                       (new (number-to-string number)))
+                  (unless (string= (match-string 1) new)
+                    (replace-match new t t nil 1))))
+               ;; An unordered item still closes any deeper levels, so a
+               ;; nested ordered list under the next bullet restarts.
+               ((my/markdown-list-item-line-p)
+                (while (and levels (> (caar levels) indent))
+                  (pop levels)))))
+            (forward-line 1))
+          (set-marker end nil))))))
+
+(defun my/markdown-renumber-after-command ()
+  "Renumber the list at point when the last command changed the buffer.
+Runs from `post-command-hook' in Markdown buffers.  Hooking the command
+loop instead of individual commands covers every way of adding or
+removing an item, from \\[my/markdown-insert-list-item-on-enter] to
+\\[kill-line] to \\[yank], with no command list to maintain."
+  (let ((tick (buffer-chars-modified-tick)))
+    (unless (eq tick my/markdown-renumber-tick)
+      (setq my/markdown-renumber-tick tick)
+      (unless (or buffer-read-only
+                  (memq this-command my/markdown-renumber-inhibit-commands))
+        (with-demoted-errors "Error renumbering list: %S"
+          ;; tree-sitter-hl-mode bypasses syntax-propertize, so make sure
+          ;; markdown-code-block-at-point-p can see the fences above point.
+          (syntax-propertize (line-end-position))
+          (unless (markdown-code-block-at-point-p)
+            (my/markdown-renumber-list-at-point)))
+        (setq my/markdown-renumber-tick (buffer-chars-modified-tick))))))
+
 (defun my/markdown-fill-paragraph-single-item (&optional justify)
   "Fill only the current sub-paragraph within a list item.
 In list items, treats the first line separately from indented continuations.
@@ -336,6 +472,10 @@ the previous line indentation for auto-indent."
   (setq-local indent-bars-spacing-override 2)
   ;; Use custom fill function for better list item handling
   (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
+  ;; Seed the tick so that merely visiting a file and moving around
+  ;; never rewrites its lists.
+  (setq my/markdown-renumber-tick (buffer-chars-modified-tick))
+  (add-hook 'post-command-hook #'my/markdown-renumber-after-command nil t)
   ;; Clear stale buffer-local overrides from previous config
   ;; versions so the global electric-pair-inhibit-predicate
   ;; takes effect.
