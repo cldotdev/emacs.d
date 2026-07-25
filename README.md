@@ -10,9 +10,8 @@
 - Git (Magit)
 - Completion (Corfu)
 - On-the-fly syntax checks (Flycheck)
-- Ordered Markdown lists renumber themselves as items are added or removed
-- Emacsclient temp files adopt the caller's working directory, so
-  relative path completion works in e.g. Claude Code prompt files
+- Ordered Markdown lists renumber themselves when `RET` inserts an item.
+- Emacsclient temp files adopt the caller's working directory, so relative path completion works in e.g. Claude Code prompt files
 - Tree-sitter grammars pinned in `init/init-treesit-grammars.el`
 
 ## Requirements
@@ -62,6 +61,8 @@
 
 | Key | Action |
 | --- | --- |
+| `RET` | my/markdown-insert-list-item-on-enter (continue the list at point and renumber it; shadows the default markdown-enter-key) |
+| `C-c C-c n` | my/markdown-renumber-list-at-point (renumber the list at point, leaving code blocks and the first item of each level alone; shadows markdown-cleanup-list-numbers, which stays available through `M-x`) |
 | `C-c TAB` | my/markdown-table-compress (compress the table at point) |
 | `C-c \|` | my/markdown-table-compress-buffer (compress all tables in the buffer) |
 | `C-c C-x i` | markdown-insert-image (relocated from `C-c C-i`, which `C-c TAB` shadows in a terminal) |

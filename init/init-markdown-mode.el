@@ -23,6 +23,12 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (define-key markdown-mode-map (kbd "C-c TAB") #'my/markdown-table-compress)
   (define-key markdown-mode-map (kbd "C-c |") #'my/markdown-table-compress-buffer)
   (define-key markdown-mode-map (kbd "C-c C-x i") #'markdown-insert-image)
+  ;; C-c C-c n renumbers only the list at point.  It shadows the built-in
+  ;; markdown-cleanup-list-numbers, which walks the whole buffer, restarts
+  ;; every level at 1, ignores `1)' markers, and rewrites numbered lines
+  ;; inside code blocks; that command stays reachable through M-x.
+  (define-key markdown-mode-command-map
+              (kbd "n") #'my/markdown-renumber-list-at-point)
   ;; Ensure syntax-propertize runs before imenu scans, so that
   ;; markdown-code-block-at-point-p correctly detects fenced code blocks.
   (advice-add 'markdown-imenu-create-nested-index
@@ -30,20 +36,51 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (advice-add 'markdown-imenu-create-flat-index
               :before #'my/markdown-ensure-syntax-propertize))
 
+(defconst my/markdown-list-item-regexp
+  "^[ \t]*\\(?:[0-9]+[.)]\\|[-*+]\\)[ \t]"
+  "Regexp matching the marker of an ordered or unordered list item.")
+
+(defconst my/markdown-ordered-list-item-regexp
+  "^[ \t]*\\([0-9]+\\)[.)][ \t]"
+  "Regexp matching an ordered list item marker.
+The item number is group 1.")
+
+(defconst my/markdown-code-fence-regexp
+  "^[ \t]*\\(?:```\\|~~~\\)"
+  "Regexp matching a fenced code block delimiter.")
+
 (defun my/markdown-insert-list-item-on-enter ()
   "Insert a new list item with appropriate marker when pressing RET in a list.
 Supports unordered lists (-, *, +), ordered lists (1., 2., etc.), and
 GitHub-style task lists (- [ ], * [ ], etc.).
 When the current list item is empty, removes the marker but keeps indentation.
-Text after cursor is moved to the new line."
+Text after cursor is moved to the new line.
+With point still in the indentation before the marker, opens a line
+above and leaves the list alone.
+After inserting an item, renumbers the list so that the items below the
+new one get the right numbers; see `my/markdown-renumber-list-at-point'."
   (interactive)
-  (let ((line-content (buffer-substring-no-properties
-                       (line-beginning-position)
-                       (line-end-position)))
-        (text-after-cursor (buffer-substring-no-properties
-                            (point)
-                            (line-end-position))))
+  (let* ((line-content (buffer-substring-no-properties
+                        (line-beginning-position)
+                        (line-end-position)))
+         (text-after-cursor (buffer-substring-no-properties
+                             (point)
+                             (line-end-position)))
+         ;; Point has not reached the marker yet, so the text carried
+         ;; over to a new item would be the marker itself.
+         (before-marker (and (string-match-p my/markdown-list-item-regexp
+                                             line-content)
+                             (<= (current-column) (current-indentation)))))
     (cond
+     ;; Open a line above, leaving the item's own line untouched.  A plain
+     ;; newline would split its indentation across the two lines, changing
+     ;; the item's nesting level.
+     (before-marker
+      (let ((column (current-column)))
+        (beginning-of-line)
+        (insert "\n")
+        (move-to-column column)))
+
      ;; Match task list: indentation + marker + [ ] or [x] + optional content
      ((string-match "^\\([ \t]*\\)\\([-*+]\\)\\s-+\\(\\[[ xX]\\]\\)\\s-*\\(.*\\)$" line-content)
       (let* ((indent (match-string 1 line-content))
@@ -101,29 +138,12 @@ Text after cursor is moved to the new line."
 
      ;; Not a list item: just do normal newline
      (t
-      (newline-and-indent)))))
-
-(defconst my/markdown-list-item-regexp
-  "^[ \t]*\\(?:[0-9]+[.)]\\|[-*+]\\)[ \t]"
-  "Regexp matching the marker of an ordered or unordered list item.")
-
-(defconst my/markdown-ordered-list-item-regexp
-  "^[ \t]*\\([0-9]+\\)[.)][ \t]"
-  "Regexp matching an ordered list item marker.
-The item number is group 1.")
-
-(defconst my/markdown-code-fence-regexp
-  "^[ \t]*\\(?:```\\|~~~\\)"
-  "Regexp matching a fenced code block delimiter.")
-
-(defvar my/markdown-renumber-inhibit-commands
-  '(undo undo-only undo-redo undo-tree-undo undo-tree-redo)
-  "Commands after which the list at point is left alone.
-Renumbering after an undo would immediately reapply the very change
-the undo just reverted.")
-
-(defvar-local my/markdown-renumber-tick nil
-  "Value of `buffer-chars-modified-tick' at the last renumber check.")
+      (newline-and-indent)))
+    ;; Only a new item can throw the numbering off.  Keep a renumbering
+    ;; bug from breaking RET itself.
+    (unless before-marker
+      (with-demoted-errors "Error renumbering list: %S"
+        (my/markdown-renumber-list-at-point)))))
 
 (defun my/markdown-list-item-line-p ()
   "Return non-nil when the current line starts a list item.
@@ -185,9 +205,15 @@ the whole list.
 
 Items that already carry the right number are left untouched, so a list
 in good shape triggers no buffer modification, no undo entry, and no
-modified flag."
+modified flag.  Does nothing outside a list or inside a fenced code
+block, where a line such as a shell `case' label looks exactly like an
+ordered item."
   (interactive)
-  (let ((bounds (my/markdown-list-bounds)))
+  ;; tree-sitter-hl-mode bypasses syntax-propertize, so make sure
+  ;; markdown-code-block-at-point-p can see the fences above point.
+  (syntax-propertize (line-end-position))
+  (let ((bounds (and (not (markdown-code-block-at-point-p))
+                     (my/markdown-list-bounds))))
     (when bounds
       (save-excursion
         (let ((end (copy-marker (cdr bounds)))
@@ -219,25 +245,6 @@ modified flag."
                   (pop levels)))))
             (forward-line 1))
           (set-marker end nil))))))
-
-(defun my/markdown-renumber-after-command ()
-  "Renumber the list at point when the last command changed the buffer.
-Runs from `post-command-hook' in Markdown buffers.  Hooking the command
-loop instead of individual commands covers every way of adding or
-removing an item, from \\[my/markdown-insert-list-item-on-enter] to
-\\[kill-line] to \\[yank], with no command list to maintain."
-  (let ((tick (buffer-chars-modified-tick)))
-    (unless (eq tick my/markdown-renumber-tick)
-      (setq my/markdown-renumber-tick tick)
-      (unless (or buffer-read-only
-                  (memq this-command my/markdown-renumber-inhibit-commands))
-        (with-demoted-errors "Error renumbering list: %S"
-          ;; tree-sitter-hl-mode bypasses syntax-propertize, so make sure
-          ;; markdown-code-block-at-point-p can see the fences above point.
-          (syntax-propertize (line-end-position))
-          (unless (markdown-code-block-at-point-p)
-            (my/markdown-renumber-list-at-point)))
-        (setq my/markdown-renumber-tick (buffer-chars-modified-tick))))))
 
 (defun my/markdown-fill-paragraph-single-item (&optional justify)
   "Fill only the current sub-paragraph within a list item.
@@ -472,10 +479,6 @@ the previous line indentation for auto-indent."
   (setq-local indent-bars-spacing-override 2)
   ;; Use custom fill function for better list item handling
   (setq-local fill-paragraph-function #'my/markdown-fill-paragraph-single-item)
-  ;; Seed the tick so that merely visiting a file and moving around
-  ;; never rewrites its lists.
-  (setq my/markdown-renumber-tick (buffer-chars-modified-tick))
-  (add-hook 'post-command-hook #'my/markdown-renumber-after-command nil t)
   ;; Clear stale buffer-local overrides from previous config
   ;; versions so the global electric-pair-inhibit-predicate
   ;; takes effect.
