@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/ess-13.05/lisp")
 
 (require 'ess-site)

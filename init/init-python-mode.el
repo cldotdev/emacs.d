@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'auto-mode-alist '("\\.py\\'" . python-ts-mode))
 
 (add-hook 'python-ts-mode-hook

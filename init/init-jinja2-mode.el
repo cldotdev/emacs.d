@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; file extension: *.jinja2 and *.html
 (require 'jinja2-mode)
 (add-hook  'jinja2-mode-hook

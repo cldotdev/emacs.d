@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/org/lisp")
 (add-to-list 'load-path "~/.emacs.d/package/org/contrib/lisp" t)
 

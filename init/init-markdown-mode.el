@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'visual-fill-column)
 
 (add-to-list 'auto-mode-alist
@@ -110,8 +111,7 @@ When point is on an indented continuation line, fill only the block of
 indented continuations, preserving proper indentation."
   (interactive)
   (save-excursion
-    (let ((orig-point (point))
-          start end)
+    (let (start end)
       (beginning-of-line)
       (cond
        ;; Case 1: We're on a list marker line
@@ -264,8 +264,7 @@ Returns the language string if inside a fenced code block, nil otherwise."
     (let* ((line-start (point))
            (line-end (line-end-position))
            (line-content (buffer-substring-no-properties line-start line-end))
-           (comment-regexp (concat "^\\([ \t]*\\)" (regexp-quote comment-str) " ?"))
-           (indent ""))
+           (comment-regexp (concat "^\\([ \t]*\\)" (regexp-quote comment-str) " ?")))
       (if (string-match comment-regexp line-content)
           ;; Line is commented - uncomment it
           (let ((indent (match-string 1 line-content))

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;;; init-mise.el --- Mise (Ruby version manager) integration
 
 (defun my-mise-setup-environment ()

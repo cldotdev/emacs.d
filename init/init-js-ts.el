@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'auto-mode-alist '("\\.[mc]?js\\'" . js-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.ts\\'"      . typescript-ts-mode))
 (add-to-list 'auto-mode-alist '("\\.[jt]sx\\'"  . tsx-ts-mode))

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/elisp-tree-sitter/core")
 (add-to-list 'load-path "~/.emacs.d/package/elisp-tree-sitter/lisp")
 (add-to-list 'load-path "~/.emacs.d/package/tree-sitter-langs")

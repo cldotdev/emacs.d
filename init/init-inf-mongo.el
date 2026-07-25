@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'inf-mongo)
 (setq-default inf-mongo-command "mongo ")
 

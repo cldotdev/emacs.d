@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (defvar iresize-mode-map
   (let ((m (make-sparse-keymap)))
     (define-key m (kbd "j") 'enlarge-window)

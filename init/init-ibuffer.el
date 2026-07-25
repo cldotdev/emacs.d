@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'ibuffer-vc)
 
 ;; Better buffer list

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (when (fboundp 'native-compile-async)
   (if (yes-or-no-p "async compile? ")
       (progn

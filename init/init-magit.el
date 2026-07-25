@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/compat")
 (add-to-list 'load-path "~/.emacs.d/package/llama")
 (add-to-list 'load-path "~/.emacs.d/package/with-editor/lisp")
@@ -77,8 +78,7 @@ symlink location."
 Treats list items like markdown-mode: first line and indented continuations separately."
   (interactive)
   (save-excursion
-    (let ((orig-point (point))
-          start end)
+    (let (start end)
       (beginning-of-line)
       (cond
        ;; Case 1: We're on a list marker line (-, *, or +)
@@ -216,7 +216,7 @@ This fixes the 'Wrong type argument: number-or-marker-p, nil' error when
 visiting renamed files that have no content changes, and also handles
 'Not inside Git repository' error when working with symlinked paths."
   (let ((toplevel (magit-toplevel)))  ; Capture toplevel in correct context
-    (condition-case err
+    (condition-case nil
         (apply orig-fun args)
       ((wrong-type-argument magit-outside-git-repo)
        ;; If we get wrong-type-argument error (no hunk) or

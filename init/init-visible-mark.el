@@ -1,10 +1,10 @@
+;;; -*- lexical-binding: t; -*-
 (require 'visible-mark)
 (defun buffer-order-next-mark (arg)
   (interactive "p")
   (when (mark)
     (let* ((p (point))
            (m (mark))
-           (n p)
            (count (if (null arg) 1 arg))
            (abscount (abs count))
            (rel

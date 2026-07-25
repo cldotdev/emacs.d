@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (setq epa-pinentry-mode 'loopback)
 
 (with-eval-after-load 'magit

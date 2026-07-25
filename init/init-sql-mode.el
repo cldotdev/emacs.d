@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; https://github.com/sql-formatter-org/sql-formatter
 (add-to-list 'load-path "~/.emacs.d/package/emacs-reformatter")
 (add-to-list 'load-path "~/.emacs.d/package/sqlformat")

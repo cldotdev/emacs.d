@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'major-mode-remap-alist '(java-mode . java-ts-mode))
 
 (add-hook 'java-ts-mode-hook

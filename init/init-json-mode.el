@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (require 'json-reformat)
 (require 'json-snatcher)
 

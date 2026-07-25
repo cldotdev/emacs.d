@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/auto-complete")
 (add-to-list 'load-path "~/.emacs.d/package/popup-el")
 

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (setq-default sh-basic-offset 2)
 (setq-default sh-indentation 2)
 (setq bash-ts-mode-indent-offset 2)

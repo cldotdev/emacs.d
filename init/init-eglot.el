@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Eglot is built into Emacs >= 29; just `require' it.
 ;;
 ;; Python is wired to pyright (managed by mise as `npm:pyright') for type

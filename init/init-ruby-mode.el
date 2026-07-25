@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Route .rb (and friends) to the tree-sitter major mode.
 (add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode))
 
@@ -73,6 +74,11 @@
       result)))
 
 (advice-add 'rubocop--file-command :around #'my-rubocop-focus-compilation-buffer)
+
+;; rubocop.el is not loaded when this file is byte-compiled, so declare its
+;; command variable special.  Without the declaration, the let below compiles
+;; to a lexical binding that rubocop--file-command never sees.
+(defvar rubocop-rubocop-command)
 
 ;; Make rubocop-emacs use mise to ensure correct Ruby version
 (defun my-rubocop-use-mise (orig-fun &rest args)

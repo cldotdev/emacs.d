@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; erc: hide join part messages
 (setq erc-hide-list '("JOIN" "PART" "QUIT"))
 (setq erc-log-channels t)

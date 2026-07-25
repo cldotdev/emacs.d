@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; color theme
 ;; (add-to-list 'load-path "~/.emacs.d/package/color-theme")
 ;; (require 'color-theme)

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (define-derived-mode cheetah-mode nxml-mode "Cheetah"
   (make-face 'cheetah-variable-face)
   (font-lock-add-keywords

@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/compat")
 (add-to-list 'load-path "~/.emacs.d/package/orderless")
 (add-to-list 'load-path "~/.emacs.d/package/vertico")

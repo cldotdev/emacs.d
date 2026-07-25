@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Starting message
 (setq initial-scratch-message "")
 (setq initial-major-mode 'text-mode)

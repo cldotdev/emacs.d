@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; C-c z c         zotelo-set-collection (also C-c z s)
 ;; C-c z u         zotelo-update-database
 ;; C-c z e         zotelo-export-secondary

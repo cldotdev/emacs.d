@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (add-to-list 'load-path "~/.emacs.d/package/multiple-cursors-1.2.0")
 
 (global-set-key (kbd "C-c :") 'mc/edit-lines)

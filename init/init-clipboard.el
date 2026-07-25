@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 (cond ((eq system-type 'gnu/linux)
        (require 'init-clipetty))
       ;; init-osx-clipboard-mode activates its mode at load; skip under batch.

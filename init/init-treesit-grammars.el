@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t; -*-
 ;; Single source of truth for tree-sitter grammar repositories and pinned
 ;; revisions. Consumed by interactive Emacs (via `require') and by
 ;; `make grammars' (via batch Emacs) so both produce identical .so files.
