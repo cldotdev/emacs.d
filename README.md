@@ -10,7 +10,8 @@
 - Git (Magit)
 - Completion (Corfu)
 - On-the-fly syntax checks (Flycheck)
-- Ordered Markdown lists renumber themselves when `RET` inserts an item.
+- Ordered Markdown lists renumber themselves when `RET` inserts an item or an item changes its indentation level
+- Nested Markdown list items line up with the content column of the item that holds them, rather than a fixed indent width
 - Emacsclient temp files adopt the caller's working directory, so relative path completion works in e.g. Claude Code prompt files
 - Tree-sitter grammars pinned in `init/init-treesit-grammars.el`
 
@@ -62,7 +63,10 @@
 | Key | Action |
 | --- | --- |
 | `RET` | my/markdown-insert-list-item-on-enter (continue the list at point and renumber it; shadows the default markdown-enter-key) |
-| `C-c C-c n` | my/markdown-renumber-list-at-point (renumber the list at point, leaving code blocks and the first item of each level alone; shadows markdown-cleanup-list-numbers, which stays available through `M-x`) |
+| `TAB` | markdown-cycle (cycle the list item at point through the columns it can nest at, then renumber the list; the stock binding, with the columns from my/markdown-indent-line and the renumbering from advice) |
+| `<backtab>` | markdown-promote (move the list item at point out one level, nested items included, then renumber the list; shadows markdown-shifttab, whose global heading cycling stays on `C-u TAB`) |
+| `C-c C-=` | markdown-demote (move the list item at point in one level, nested items included, then renumber the list; the stock binding, with both behaviors added by advice) |
+| `C-c C-c n` | my/markdown-renumber-list-at-point (renumber the list at point, restarting each nested level at 1 and leaving code blocks and the first item of the outermost level alone; shadows markdown-cleanup-list-numbers, which stays available through `M-x`) |
 | `C-c TAB` | my/markdown-table-compress (compress the table at point) |
 | `C-c \|` | my/markdown-table-compress-buffer (compress all tables in the buffer) |
 | `C-c C-x i` | markdown-insert-image (relocated from `C-c C-i`, which `C-c TAB` shadows in a terminal) |

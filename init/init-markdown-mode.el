@@ -33,6 +33,24 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   ;; inside code blocks; that command stays reachable through M-x.
   (define-key markdown-mode-command-map
               (kbd "n") #'my/markdown-renumber-list-at-point)
+  ;; Renumber after either way an item can change level: Tab, which
+  ;; cycles the indentation of the line at point, and the promote and
+  ;; demote commands, which move an item with its children.  Advising
+  ;; the list-item helpers rather than markdown-promote and
+  ;; markdown-demote covers every key those two are bound to and leaves
+  ;; their heading and table branches alone.
+  ;;
+  ;; The same helpers indent by a fixed markdown-list-indent-width,
+  ;; which lines an item up with the content of the item above only
+  ;; when that item's marker happens to be as wide, so the overrides
+  ;; below move through the columns Tab cycles through instead.  They
+  ;; renumber the list themselves rather than through a separate :after
+  ;; advice, which would fire even when the item had nowhere to go.
+  (advice-add 'markdown-cycle :after #'my/markdown-renumber-after-cycle)
+  (advice-add 'markdown-promote-list-item
+              :override #'my/markdown-promote-list-item)
+  (advice-add 'markdown-demote-list-item
+              :override #'my/markdown-demote-list-item)
   ;; Ensure syntax-propertize runs before imenu scans, so that
   ;; markdown-code-block-at-point-p correctly detects fenced code blocks.
   (advice-add 'markdown-imenu-create-nested-index
@@ -48,6 +66,12 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   "^[ \t]*\\([0-9]+\\)[.)][ \t]"
   "Regexp matching an ordered list item marker.
 The item number is group 1.")
+
+(defconst my/markdown-list-item-content-regexp
+  (concat my/markdown-list-item-regexp "[ \t]*")
+  "Regexp matching a list item marker and the whitespace after it.
+The match ends at the column the item's own content starts at, which
+is where anything nested under the item has to line up.")
 
 (defconst my/markdown-code-fence-regexp
   "^[ \t]*\\(?:```\\|~~~\\)"
@@ -155,34 +179,44 @@ Point must be at the beginning of the line."
   (and (looking-at-p my/markdown-list-item-regexp)
        (not (looking-at-p markdown-regex-hr))))
 
+(defun my/markdown-scan-list-items-backward (function)
+  "Call FUNCTION on each list item line above point, nearest first.
+Point is at the beginning of the line for each call.  The scan stops
+where the list does: at a code fence, at an unindented line that is not
+a list item, and at two consecutive blank lines.  FUNCTION returning
+nil stops it early."
+  (save-excursion
+    (beginning-of-line)
+    (let ((blanks 0)
+          (scanning t))
+      (while (and scanning (= 0 (forward-line -1)))
+        (cond
+         ((looking-at-p my/markdown-code-fence-regexp)
+          (setq scanning nil))
+         ((looking-at-p markdown-regex-blank-line)
+          (setq blanks (1+ blanks))
+          (when (> blanks 1) (setq scanning nil)))
+         ((my/markdown-list-item-line-p)
+          (setq blanks 0)
+          (unless (funcall function) (setq scanning nil)))
+         ;; Indented text continues the item above.
+         ((> (current-indentation) 0)
+          (setq blanks 0))
+         (t (setq scanning nil)))))))
+
 (defun my/markdown-list-bounds ()
   "Return the bounds of the list around point as (BEGIN . END).
-Return nil unless point is on a list item line.  The list stops at a
-code fence, at an unindented line that is not a list item, and at two
-consecutive blank lines, so a list interrupted by a code block or a
-paragraph counts as two separate lists."
+Return nil unless point is on a list item line.  The list stops where
+`my/markdown-scan-list-items-backward' stops scanning, so a list
+interrupted by a code block or a paragraph counts as two separate
+lists."
   (save-excursion
     (beginning-of-line)
     (when (my/markdown-list-item-line-p)
       (let ((begin (point))
             (end (line-end-position)))
-        (save-excursion
-          (let ((blanks 0)
-                (scanning t))
-            (while (and scanning (= 0 (forward-line -1)))
-              (cond
-               ((looking-at-p my/markdown-code-fence-regexp)
-                (setq scanning nil))
-               ((looking-at-p "^[ \t]*$")
-                (setq blanks (1+ blanks))
-                (when (> blanks 1) (setq scanning nil)))
-               ((my/markdown-list-item-line-p)
-                (setq begin (point)
-                      blanks 0))
-               ;; Indented text continues the item above.
-               ((> (current-indentation) 0)
-                (setq blanks 0))
-               (t (setq scanning nil))))))
+        (my/markdown-scan-list-items-backward
+         (lambda () (setq begin (point)) t))
         (save-excursion
           (let ((blanks 0)
                 (scanning t))
@@ -190,7 +224,7 @@ paragraph counts as two separate lists."
               (cond
                ((looking-at-p my/markdown-code-fence-regexp)
                 (setq scanning nil))
-               ((looking-at-p "^[ \t]*$")
+               ((looking-at-p markdown-regex-blank-line)
                 (setq blanks (1+ blanks))
                 (when (> blanks 1) (setq scanning nil)))
                ((or (my/markdown-list-item-line-p)
@@ -200,12 +234,67 @@ paragraph counts as two separate lists."
                (t (setq scanning nil))))))
         (cons begin end)))))
 
-(defun my/markdown-renumber-list-at-point ()
+(defun my/markdown-list-item-content-column ()
+  "Return the column the content of the item at point starts at.
+Point must be at the beginning of a list item line."
+  (save-excursion
+    (looking-at my/markdown-list-item-content-regexp)
+    (goto-char (match-end 0))
+    (current-column)))
+
+(defun my/markdown-list-indent-positions ()
+  "Return the columns the line at point can be indented to, or nil.
+The columns are 0 and the content column of each list item that could
+hold the line: the nearest one above it, then each item that in turn
+encloses that one.
+
+Return nil when no list item precedes the line, leaving it no level to
+move into."
+  (let ((positions nil)
+        (nearest nil))
+    (my/markdown-scan-list-items-backward
+     (lambda ()
+       (let ((indent (current-indentation)))
+         ;; Only items shallower than the ones already seen enclose the
+         ;; line; siblings of those add no level of their own.
+         (when (or (null nearest) (< indent nearest))
+           (setq nearest indent)
+           (push (my/markdown-list-item-content-column) positions))
+         ;; Nothing above an unindented item can enclose the line.
+         (> indent 0))))
+    (when positions
+      (sort (delete-dups (cons 0 positions)) #'<))))
+
+(defun my/markdown-deeper-indent-position (cur positions)
+  "Return the first of POSITIONS deeper than column CUR, or nil.
+The counterpart of `markdown-outdent-find-next-position', which picks
+the nearest shallower column."
+  (seq-find (lambda (position) (> position cur)) positions))
+
+(defun my/markdown-list-base-indent (begin end)
+  "Return the smallest indentation of the list items between BEGIN and END.
+Items at that indentation make up the outermost level of the list."
+  (save-excursion
+    (goto-char begin)
+    (beginning-of-line)
+    (let ((base most-positive-fixnum))
+      (while (< (point) end)
+        (when (my/markdown-list-item-line-p)
+          (setq base (min base (current-indentation))))
+        (forward-line 1))
+      base)))
+
+(defun my/markdown-renumber-list-at-point (&optional restart)
   "Renumber the ordered items of the list around point.
-Each indentation level is numbered on its own, starting from the number
-of its first item, so a list that deliberately picks up at `4.' keeps
-its offset.  Changing the first item is therefore the way to renumber
-the whole list.
+The outermost level starts at the number of its own first item, so a
+list that deliberately picks up at `4.' keeps its offset; changing that
+item is the way to renumber the whole list.  Nested levels always
+restart at 1, because their first item usually carries a number that
+`RET' gave it while it still belonged to the level above.
+
+With RESTART non-nil, the item at point starts its own level at 1 even
+at the outermost level.  The reindenting commands pass it once they
+have moved an item.
 
 Items that already carry the right number are left untouched, so a list
 in good shape triggers no buffer modification, no undo entry, and no
@@ -213,14 +302,25 @@ modified flag.  Does nothing outside a list or inside a fenced code
 block, where a line such as a shell `case' label looks exactly like an
 ordered item."
   (interactive)
-  ;; tree-sitter-hl-mode bypasses syntax-propertize, so make sure
-  ;; markdown-code-block-at-point-p can see the fences above point.
-  (syntax-propertize (line-end-position))
-  (let ((bounds (and (not (markdown-code-block-at-point-p))
+  (let ((bounds (and (save-excursion
+                       (beginning-of-line)
+                       (my/markdown-list-item-line-p))
+                     ;; tree-sitter-hl-mode bypasses syntax-propertize,
+                     ;; so make sure markdown-code-block-at-point-p can
+                     ;; see the fences above point.  RET runs this
+                     ;; command on every line, and propertizing is the
+                     ;; expensive step, so do it only from a list item.
+                     (progn (syntax-propertize (line-end-position))
+                            (not (markdown-code-block-at-point-p)))
                      (my/markdown-list-bounds))))
     (when bounds
       (save-excursion
         (let ((end (copy-marker (cdr bounds)))
+              (base (my/markdown-list-base-indent (car bounds) (cdr bounds)))
+              ;; A marker, since renumbering a line above it can change
+              ;; the width of that line's number.
+              (restart-line (and restart
+                                 (copy-marker (line-beginning-position))))
               ;; Alist of (INDENT . LAST-NUMBER), deepest level first.
               (levels nil))
           (goto-char (car bounds))
@@ -231,14 +331,14 @@ ordered item."
                ((looking-at my/markdown-ordered-list-item-regexp)
                 (while (and levels (> (caar levels) indent))
                   (pop levels))
-                (let* ((number (if (and levels (= (caar levels) indent))
+                (let* ((seed (if (or (> indent base)
+                                     (and restart-line
+                                          (= restart-line (point))))
+                                 1
+                               (string-to-number (match-string 1))))
+                       (number (if (and levels (= (caar levels) indent))
                                    (setcdr (car levels) (1+ (cdar levels)))
-                                 ;; A level opens on the number of its
-                                 ;; own first item.
-                                 (cdar (push (cons indent
-                                                   (string-to-number
-                                                    (match-string 1)))
-                                             levels))))
+                                 (cdar (push (cons indent seed) levels))))
                        (new (number-to-string number)))
                   (unless (string= (match-string 1) new)
                     (replace-match new t t nil 1))))
@@ -248,7 +348,33 @@ ordered item."
                 (while (and levels (> (caar levels) indent))
                   (pop levels)))))
             (forward-line 1))
-          (set-marker end nil))))))
+          (set-marker end nil)
+          (when restart-line (set-marker restart-line nil)))))))
+
+(defun my/markdown-list-item-line-position ()
+  "Return the start of the list item line holding point, or nil.
+A continuation line belongs to the item it is indented under; the
+reindenting commands can leave point on such a line."
+  (save-excursion
+    (beginning-of-line)
+    (while (and (not (my/markdown-list-item-line-p))
+                (> (current-indentation) 0)
+                (= 0 (forward-line -1))))
+    (and (my/markdown-list-item-line-p) (point))))
+
+(defun my/markdown-renumber-after-cycle (&optional arg)
+  "Renumber the list at point after `markdown-cycle' indented an item.
+ARG is the command's own argument, which makes the command cycle global
+visibility instead of indenting.  The command reindents the line at
+point and nothing else, so a line that is not itself a list item, such
+as a table row or a continuation line, leaves every number as it is."
+  (unless arg
+    ;; Keep a renumbering bug from breaking Tab itself.
+    (with-demoted-errors "Error renumbering list: %S"
+      (save-excursion
+        (beginning-of-line)
+        (when (my/markdown-list-item-line-p)
+          (my/markdown-renumber-list-at-point t))))))
 
 (defconst my/markdown-blockquote-regexp
   "^[ \t]*\\(> ?\\)"
@@ -262,7 +388,7 @@ after the marker, which would flatten the indentation of quoted text.")
 Point must be at the beginning of the line.  Whitespace left on such a
 line would trail the blockquote marker, either the one about to be
 inserted or the one just removed."
-  (when (looking-at-p "^[ \t]*$")
+  (when (looking-at-p markdown-regex-blank-line)
     (delete-region (point) (line-end-position))))
 
 (defun my/markdown-toggle-blockquote (begin end)
@@ -293,7 +419,7 @@ around them stay in a single blockquote."
       (goto-char begin)
       (beginning-of-line)
       (while (< (point) end)
-        (unless (looking-at-p "^[ \t]*$")
+        (unless (looking-at-p markdown-regex-blank-line)
           (setq indent (if indent
                            (min indent (current-indentation))
                          (current-indentation)))
@@ -336,7 +462,7 @@ indented continuations, preserving proper indentation."
           (while (and (not (eobp))
                       (not (looking-at markdown-regex-list))        ; Not another list item
                       (not (looking-at "^[ \t]+[^ \t\n]"))          ; Not an indented line
-                      (not (looking-at "^[ \t]*$")))                ; Not a blank line
+                      (not (looking-at markdown-regex-blank-line))) ; Not a blank line
             (forward-line 1))
           (setq end (point))
           ;; Fill with proper indentation for continuation lines
@@ -524,20 +650,99 @@ appropriate for the specified language instead of HTML comments."
 (with-eval-after-load 'markdown-mode
   (define-key gfm-mode-map (kbd "M-;") #'my/gfm-comment-dwim))
 
+(defun my/markdown-next-indent-position (cur)
+  "Return the column to cycle to from column CUR.
+A list item moves through the columns of
+`my/markdown-list-indent-positions', so that it lands under the item
+that holds it; past the deepest one it wraps around to 0.  Every other
+line, the first item of a list included, moves in `tab-width'
+increments up to four times that width."
+  (let ((positions (and (save-excursion
+                          (beginning-of-line)
+                          (my/markdown-list-item-line-p))
+                        (my/markdown-list-indent-positions))))
+    (cond
+     (positions (or (my/markdown-deeper-indent-position cur positions) 0))
+     ((>= cur (* 4 tab-width)) 0)
+     (t (+ cur tab-width)))))
+
 (defun my/markdown-indent-line ()
-  "Cycle indentation in `tab-width' increments.
-When invoked via `markdown-cycle' (Tab key), cycle through
-positions 0, `tab-width', 2*`tab-width', etc.  Otherwise, match
-the previous line indentation for auto-indent."
-  (let* ((max-indent (* 4 tab-width))
-         (cur (current-indentation))
+  "Cycle the indentation of the line at point.
+When invoked via `markdown-cycle' (Tab key), move to the column
+`my/markdown-next-indent-position' returns.  Otherwise, match the
+previous line's indentation for auto-indent."
+  (let* ((cur (current-indentation))
          (next (if (eq this-command 'markdown-cycle)
-                   (if (>= cur max-indent) 0 (+ cur tab-width))
+                   (my/markdown-next-indent-position cur)
                  (or (markdown-prev-line-indent) 0))))
     (if (<= (current-column) cur)
         (progn (indent-line-to next)
                (back-to-indentation))
       (save-excursion (indent-line-to next)))))
+
+(defun my/markdown-list-item-subtree-end ()
+  "Return the end of the list item at point, nested items included.
+Point must be at the beginning of a list item line.  Anything indented
+deeper than the item belongs to it, blank lines between them included."
+  (save-excursion
+    (let ((indent (current-indentation))
+          (end (line-beginning-position 2))
+          (blanks 0)
+          (scanning t))
+      (while (and scanning (= 0 (forward-line 1)))
+        (cond
+         ((looking-at-p markdown-regex-blank-line)
+          (setq blanks (1+ blanks))
+          (when (> blanks 1) (setq scanning nil)))
+         ((> (current-indentation) indent)
+          (setq end (line-beginning-position 2)
+                blanks 0))
+         (t (setq scanning nil))))
+      end)))
+
+(defun my/markdown-shift-list-item (target)
+  "Move the list item at point to column TARGET, nested items included.
+Point must be at the beginning of a list item line.  Return non-nil
+when the item actually moved."
+  (let ((delta (- target (current-indentation))))
+    (unless (zerop delta)
+      (indent-rigidly (line-beginning-position)
+                      (my/markdown-list-item-subtree-end)
+                      delta)
+      t)))
+
+(defun my/markdown-reindent-list-item (target-function)
+  "Move the list item at point to the column TARGET-FUNCTION picks.
+TARGET-FUNCTION receives the item's current indentation and the columns
+from `my/markdown-list-indent-positions', and returns nil to leave the
+item where it is.  Renumber the list only once the item has moved, so
+that an item with nowhere to go leaves the number the list opens on
+alone."
+  (save-excursion
+    (let ((item (my/markdown-list-item-line-position)))
+      (when item
+        (goto-char item)
+        (let ((target (funcall target-function
+                               (current-indentation)
+                               (my/markdown-list-indent-positions))))
+          (when (and target (my/markdown-shift-list-item target))
+            ;; Keep a renumbering bug from breaking the command itself.
+            (with-demoted-errors "Error renumbering list: %S"
+              (my/markdown-renumber-list-at-point t))))))))
+
+(defun my/markdown-demote-list-item (&optional _bounds)
+  "Indent the list item at point to the next column it can sit at.
+Nested items move with it.  Does nothing when no item above can hold
+it."
+  (interactive)
+  (my/markdown-reindent-list-item #'my/markdown-deeper-indent-position))
+
+(defun my/markdown-promote-list-item (&optional _bounds)
+  "Unindent the list item at point to the previous column it can sit at.
+Nested items move with it.  An item that no other item encloses goes
+back to column 0."
+  (interactive)
+  (my/markdown-reindent-list-item #'markdown-outdent-find-next-position))
 
 (defun my/markdown-mode-setup ()
   "Setup for markdown-mode buffers."
