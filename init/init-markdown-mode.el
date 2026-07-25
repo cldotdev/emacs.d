@@ -23,6 +23,10 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (define-key markdown-mode-map (kbd "C-c TAB") #'my/markdown-table-compress)
   (define-key markdown-mode-map (kbd "C-c |") #'my/markdown-table-compress-buffer)
   (define-key markdown-mode-map (kbd "C-c C-x i") #'markdown-insert-image)
+  ;; markdown-mode only ever adds a blockquote marker, through
+  ;; markdown-insert-blockquote and markdown-blockquote-region; nothing
+  ;; takes one away.
+  (define-key markdown-mode-map (kbd "C-c q") #'my/markdown-toggle-blockquote)
   ;; C-c C-c n renumbers only the list at point.  It shadows the built-in
   ;; markdown-cleanup-list-numbers, which walks the whole buffer, restarts
   ;; every level at 1, ignores `1)' markers, and rewrites numbered lines
@@ -245,6 +249,72 @@ ordered item."
                   (pop levels)))))
             (forward-line 1))
           (set-marker end nil))))))
+
+(defconst my/markdown-blockquote-regexp
+  "^[ \t]*\\(> ?\\)"
+  "Regexp matching one blockquote marker at the start of a line.
+The marker, with the space that usually follows it, is group 1.
+The stock `markdown-regex-blockquote' instead takes in every space
+after the marker, which would flatten the indentation of quoted text.")
+
+(defun my/markdown-clear-blank-line ()
+  "Empty the current line when it holds nothing but whitespace.
+Point must be at the beginning of the line.  Whitespace left on such a
+line would trail the blockquote marker, either the one about to be
+inserted or the one just removed."
+  (when (looking-at-p "^[ \t]*$")
+    (delete-region (point) (line-end-position))))
+
+(defun my/markdown-toggle-blockquote (begin end)
+  "Toggle the blockquote marker on every line between BEGIN and END.
+Interactively, act on the region when it is active and on the line at
+point otherwise; since Markdown buffers here run `visual-line-mode'
+without `auto-fill-mode', that line is usually a whole paragraph.
+
+Strip one level of quoting when every non-blank line already carries a
+marker, and add one otherwise, so a partly quoted region ends up fully
+quoted.  The marker goes at the common indentation of the non-blank
+lines, which keeps a quote inside the list item it belongs to and
+leaves the lines indented relative to each other as they were.  Blank
+lines get a bare `>' at that same column, so that the paragraphs
+around them stay in a single blockquote."
+  (interactive
+   (if (use-region-p)
+       (list (region-beginning) (region-end))
+     ;; Take in the line break: a blank line ends where it begins, so
+     ;; without it the loops below would get an empty range.
+     (list (line-beginning-position) (line-beginning-position 2))))
+  (save-excursion
+    ;; A range of nothing but blank lines leaves `indent' unset, which
+    ;; doubles as the flag for having no marker to strip.
+    (let ((end (copy-marker end))
+          (quoted t)
+          (indent nil))
+      (goto-char begin)
+      (beginning-of-line)
+      (while (< (point) end)
+        (unless (looking-at-p "^[ \t]*$")
+          (setq indent (if indent
+                           (min indent (current-indentation))
+                         (current-indentation)))
+          (unless (looking-at-p my/markdown-blockquote-regexp)
+            (setq quoted nil)))
+        (forward-line 1))
+      (goto-char begin)
+      (beginning-of-line)
+      (while (< (point) end)
+        (if (and quoted indent)
+            (when (looking-at my/markdown-blockquote-regexp)
+              (replace-match "" t t nil 1)
+              (beginning-of-line)
+              (my/markdown-clear-blank-line))
+          (my/markdown-clear-blank-line)
+          (move-to-column (or indent 0) t)
+          (insert (if (eolp) ">" "> ")))
+        (forward-line 1))
+      (set-marker end nil)))
+  ;; Keep the region alive so that a second press toggles it back.
+  (setq deactivate-mark nil))
 
 (defun my/markdown-fill-paragraph-single-item (&optional justify)
   "Fill only the current sub-paragraph within a list item.

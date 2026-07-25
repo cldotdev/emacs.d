@@ -66,6 +66,8 @@
 | `C-c TAB` | my/markdown-table-compress (compress the table at point) |
 | `C-c \|` | my/markdown-table-compress-buffer (compress all tables in the buffer) |
 | `C-c C-x i` | markdown-insert-image (relocated from `C-c C-i`, which `C-c TAB` shadows in a terminal) |
+| `C-c q` | my/markdown-toggle-blockquote (quote or unquote the region, or the line at point; the built-in `C-c C-s q` and `C-c C-s Q` only ever add a marker) |
+| `M-;` | my/gfm-comment-dwim (comment with the syntax of the code block's language inside a fence and with HTML comments outside; gfm-mode only, shadows the global comment-dwim-line) |
 
 ### SLIME
 
