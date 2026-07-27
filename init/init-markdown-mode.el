@@ -16,6 +16,12 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (setq markdown-gfm-use-electric-backquote nil)
   (define-key markdown-mode-map (kbd "<backtab>") 'markdown-promote)
   (define-key markdown-mode-map (kbd "RET") #'my/markdown-insert-list-item-on-enter)
+  ;; DEL takes the marker off a list item before touching its
+  ;; indentation.  The stock markdown-outdent-or-delete never removes a
+  ;; marker, and unindents through the columns of markdown-calc-indents
+  ;; rather than the ones TAB cycles through.
+  (define-key markdown-mode-map (kbd "DEL")
+              #'my/markdown-delete-marker-on-backspace)
   ;; Compress table padding for narrow-screen reading.  In a terminal
   ;; C-c TAB is read as C-c C-i, which shadows the default
   ;; markdown-insert-image, so rebind that to C-c C-x i (next to the
@@ -376,6 +382,74 @@ as a table row or a continuation line, leaves every number as it is."
         (when (my/markdown-list-item-line-p)
           (my/markdown-renumber-list-at-point t))))))
 
+(defun my/markdown-list-item-content-start-p ()
+  "Return non-nil when point sits where a list item's content starts.
+Everything before point on the line is then the indentation of the
+item, its marker, and the whitespace after the marker.  A line inside a
+fenced code block does not count, since a shell `case' label there
+looks exactly like an ordered item."
+  (let ((position (point)))
+    (and (save-excursion
+           (beginning-of-line)
+           (and (my/markdown-list-item-line-p)
+                (looking-at my/markdown-list-item-content-regexp)
+                (= (match-end 0) position)))
+         ;; tree-sitter-hl-mode bypasses syntax-propertize, so make
+         ;; sure markdown-code-block-at-point-p can see the fences
+         ;; above point.
+         (progn (syntax-propertize (line-end-position))
+                (not (markdown-code-block-at-point-p))))))
+
+(defun my/markdown-strip-list-item-marker ()
+  "Replace the marker of the list item at point with spaces.
+Point must sit where the content of the item starts, and stays in that
+column, which is where text nested under the item above belongs.
+Renumber the list afterwards, since the items below the line have moved
+up a number."
+  (let* ((marker (save-excursion (back-to-indentation) (point)))
+         (width (- (current-column)
+                   (save-excursion (goto-char marker) (current-column)))))
+    (delete-region marker (point))
+    (insert (make-string width ?\s)))
+  ;; The line no longer carries a marker of its own, so renumber from
+  ;; the item it continues.
+  (let ((item (my/markdown-list-item-line-position)))
+    (when item
+      ;; Keep a renumbering bug from breaking DEL itself.
+      (with-demoted-errors "Error renumbering list: %S"
+        (save-excursion
+          (goto-char item)
+          (my/markdown-renumber-list-at-point))))))
+
+(defun my/markdown-delete-marker-on-backspace (arg)
+  "Strip a list marker, unindent the line, or delete ARG characters back.
+With point right after the marker of a list item, ordered or
+unordered, replace that marker with spaces: the line turns into a
+continuation of the item above it, and point keeps its column.  See
+`my/markdown-strip-list-item-marker'.  An ARG of more than one skips
+this step, since a numeric argument asks for that many characters
+rather than for a marker.
+
+With nothing but whitespace before point, unindent the line to the
+column `my/markdown-previous-indent-position' returns.  The two steps
+together walk a nested item back out to column 0, one press at a time.
+
+Anywhere else, delete ARG characters backwards.  Replaces
+`markdown-outdent-or-delete', which unindents through the columns of
+`markdown-calc-indents' rather than the ones `TAB' cycles through."
+  (interactive "*p")
+  (let ((column (current-column)))
+    (cond
+     ((use-region-p)
+      (backward-delete-char-untabify arg))
+     ((and (= arg 1) (my/markdown-list-item-content-start-p))
+      (my/markdown-strip-list-item-marker))
+     ((and (> column 0)
+           (= column (save-excursion (back-to-indentation) (current-column))))
+      (indent-line-to (my/markdown-previous-indent-position column)))
+     (t
+      (backward-delete-char-untabify arg)))))
+
 (defconst my/markdown-blockquote-regexp
   "^[ \t]*\\(> ?\\)"
   "Regexp matching one blockquote marker at the start of a line.
@@ -664,6 +738,19 @@ moves in `tab-width' increments up to four times that width."
      (positions (or (my/markdown-deeper-indent-position cur positions) 0))
      ((>= cur (* 4 tab-width)) 0)
      (t (+ cur tab-width)))))
+
+(defun my/markdown-previous-indent-position (cur)
+  "Return the column to unindent to from column CUR.
+The counterpart of `my/markdown-next-indent-position': a line that a
+list item precedes moves back through the columns of
+`my/markdown-list-indent-positions', and every other line moves in
+`tab-width' decrements down to 0.  Both directions therefore walk the
+same columns, so that unindenting a line and cycling it back with
+`TAB' leaves it where it started."
+  (let ((positions (my/markdown-list-indent-positions)))
+    (if positions
+        (markdown-outdent-find-next-position cur positions)
+      (max 0 (- cur tab-width)))))
 
 (defun my/markdown-indent-line ()
   "Cycle the indentation of the line at point.

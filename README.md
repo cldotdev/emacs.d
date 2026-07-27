@@ -12,6 +12,7 @@
 - On-the-fly syntax checks (Flycheck)
 - Ordered Markdown lists renumber themselves when `RET` inserts an item or an item changes its indentation level
 - Text nested under a Markdown list item, be it another item or a continuation line, lines up with the content column of the item that holds it, rather than a fixed indent width
+- `DEL` right after the marker of a Markdown list item takes the marker away, leaving the line indented as a continuation of the item above; further presses unindent the line through the same columns `TAB` cycles through
 - Emacsclient temp files adopt the caller's working directory, so relative path completion works in e.g. Claude Code prompt files
 - Tree-sitter grammars pinned in `init/init-treesit-grammars.el`
 
@@ -63,6 +64,7 @@
 | Key | Action |
 | --- | --- |
 | `RET` | my/markdown-insert-list-item-on-enter (continue the list at point and renumber it; shadows the default markdown-enter-key) |
+| `DEL` | my/markdown-delete-marker-on-backspace (replace a list item's marker with spaces when point sits right after it and renumber the list, or unindent a line that holds nothing but whitespace before point to the previous column it can nest at; shadows markdown-outdent-or-delete, which unindents through the columns of markdown-calc-indents instead) |
 | `TAB` | markdown-cycle (cycle the line at point through the columns it can nest at under the list above, then renumber the list; the stock binding, with the columns from my/markdown-indent-line and the renumbering from advice) |
 | `<backtab>` | markdown-promote (move the list item at point out one level, nested items included, then renumber the list; shadows markdown-shifttab, whose global heading cycling stays on `C-u TAB`) |
 | `C-c C-=` | markdown-demote (move the list item at point in one level, nested items included, then renumber the list; the stock binding, with both behaviors added by advice) |
