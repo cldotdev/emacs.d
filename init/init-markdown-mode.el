@@ -652,15 +652,14 @@ appropriate for the specified language instead of HTML comments."
 
 (defun my/markdown-next-indent-position (cur)
   "Return the column to cycle to from column CUR.
-A list item moves through the columns of
+A line that a list item precedes moves through the columns of
 `my/markdown-list-indent-positions', so that it lands under the item
-that holds it; past the deepest one it wraps around to 0.  Every other
-line, the first item of a list included, moves in `tab-width'
-increments up to four times that width."
-  (let ((positions (and (save-excursion
-                          (beginning-of-line)
-                          (my/markdown-list-item-line-p))
-                        (my/markdown-list-indent-positions))))
+that holds it; past the deepest one it wraps around to 0.  This covers
+the continuation lines of an item as much as the items themselves,
+since text nested under an item has to line up with that item's content
+just the same.  Every other line, the first item of a list included,
+moves in `tab-width' increments up to four times that width."
+  (let ((positions (my/markdown-list-indent-positions)))
     (cond
      (positions (or (my/markdown-deeper-indent-position cur positions) 0))
      ((>= cur (* 4 tab-width)) 0)
