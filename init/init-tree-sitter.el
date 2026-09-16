@@ -15,7 +15,7 @@
 (global-tree-sitter-mode)
 (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 ;; Only register modes that do NOT have a built-in `*-ts-mode' replacement
-;; in this config. Languages already routed to treesit (bash, css, go, java,
+;; in this config. Languages already routed to treesit (bash, css, go,
 ;; javascript/typescript/tsx, json, python, ruby, sh, yaml, dockerfile) are
 ;; intentionally omitted -- their buffers use `*-ts-mode' which is driven by
 ;; the built-in `treesit' API, not by elisp-tree-sitter.

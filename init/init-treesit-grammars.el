@@ -23,7 +23,6 @@
         (python     "https://github.com/tree-sitter/tree-sitter-python"         "v0.23.6")
         (ruby       "https://github.com/tree-sitter/tree-sitter-ruby"           "v0.23.1")
         (go         "https://github.com/tree-sitter/tree-sitter-go"             "v0.23.4")
-        (java       "https://github.com/tree-sitter/tree-sitter-java"           "v0.23.5")
         (json       "https://github.com/tree-sitter/tree-sitter-json"           "v0.24.8")
         (css        "https://github.com/tree-sitter/tree-sitter-css"            "v0.23.2")
         (bash       "https://github.com/tree-sitter/tree-sitter-bash"           "v0.23.3")

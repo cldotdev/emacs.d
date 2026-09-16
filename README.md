@@ -3,7 +3,6 @@
 ## Features
 
 - Python (`python-ts-mode` + Eglot + Pyright + ruff)
-- Java (`java-ts-mode`)
 - JavaScript / TypeScript (`js-ts-mode`, `typescript-ts-mode`, `tsx-ts-mode`)
 - Lisp (SLIME)
 - Markdown
