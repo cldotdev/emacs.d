@@ -17,7 +17,7 @@
 ;; Allow grid to fall back to a single column on narrow frames.
 (setq vertico-grid-min-columns 1)
 
-;; The grid arrangement of vertico-grid.el 2.4, with the column count measured
+;; The grid arrangement of vertico-grid.el 2.15, with the column count measured
 ;; by `string-width' where upstream uses `length'.  A CJK character counts as
 ;; one character but occupies two columns, so `length' under-measures a CJK
 ;; candidate: the grid lays out more columns than the window can hold, and
