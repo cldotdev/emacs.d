@@ -1,7 +1,10 @@
 ;;; Emacs configuration  -*- lexical-binding: t -*-
 ;;; requirement: emacs >= 30
 
-;; (byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
+;; `make compile' byte-compiles `init/' and `package/', and `load' takes a
+;; `.elc' over its source regardless of timestamps, so without this an edit
+;; under `init/' would sit unused until the next `make compile'.
+(setq load-prefer-newer t)
 
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,

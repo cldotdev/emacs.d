@@ -42,12 +42,6 @@ update:
 			echo "note: $$dir holds a git repository git does not track; left alone"; \
 		fi; \
 	done
-	@# `load' takes a `.elc' over its `.el' regardless of timestamps, and
-	@# `byte-recompile-directory' never deletes one whose source is gone.
-	@find . -name '*.elc' -not -path './.git/*' | \
-		while read -r elc; do \
-			test -f "$${elc%c}" || { echo "pruning orphaned $$elc"; rm -f "$$elc"; }; \
-		done
 	@# `loaddefs-generate' rewrites the file only when a helm source is
 	@# newer, and helm's `autoloads' target has no prerequisites to force
 	@# the rebuild, so upgrading Emacs alone never updates the header.
@@ -55,7 +49,6 @@ update:
 	$(MAKE) compile
 
 compile:
-	emacs --batch --eval '(byte-recompile-directory ".")'
 	mkdir -p erc/log
 	cd ${magit_dir} && \
 		echo "LOAD_PATH = -L ${magit_dir}/lisp \
@@ -73,6 +66,10 @@ compile:
 		make clean && \
 		make lisp
 	cd ${helm_dir} && make clean && EMACSLOADPATH="${async_dir}:" make
+	@# Everything the two makefiles above did not build.  Their `.elc' are
+	@# newer than their sources by now, and `byte-recompile-directory'
+	@# leaves such a file alone.
+	emacs --batch -l make-compile.el
 
 # Build every tree-sitter grammar listed in init/init-treesit-grammars.el.
 # Each language is git-cloned + compiled by `treesit-install-language-grammar'

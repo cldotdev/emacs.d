@@ -75,6 +75,10 @@ Each of the following is needed only by the feature named beside it, and everyth
 
    `make` byte-compiles the configuration and its packages, then clones and compiles every tree-sitter grammar pinned in `init/init-treesit-grammars.el`, which needs network access. Run `make compile` instead to do the byte-compilation alone.
 
+   `make compile` builds magit and helm through their own makefiles, then walks `init/` and `package/` with `make-compile.el`. Every package is compiled in an Emacs of its own, against the `load-path` the init files add at startup: a batch Emacs starts without that `load-path` and would compile each macro the vendored packages provide into a plain function call, and a shared session lets one package redefine what the next compiles against. Before the walk it deletes every `.elc` that is older than its `.el` or whose `.el` is gone, since `require` would otherwise hand the compiler the stale one.
+
+   `init.el` itself is left uncompiled. It sets `load-prefer-newer`, so an edit under `init/` takes effect at the next start whether or not `make compile` has run since.
+
 ## Updating
 
 ```bash
@@ -82,10 +86,9 @@ cd ~/.emacs.d
 make update
 ```
 
-`make update` pulls with `--ff-only`, syncs and updates every submodule recursively, and then runs `make compile`. It also removes three kinds of leftovers:
+`make update` pulls with `--ff-only`, syncs and updates every submodule recursively, and then runs `make compile`. It also removes two kinds of leftovers:
 
 - The work tree of a submodule that upstream removed. `git pull` cannot remove it (`warning: unable to rmdir`) and `git submodule update` ignores it, so otherwise it sits in `package/` forever. A directory that holds a git repository git did not create as a submodule work tree is reported and kept.
-- A `.elc` file whose `.el` is gone. This configuration leaves `load-prefer-newer` at nil, so `load` takes a `.elc` over its source regardless of timestamps, and `byte-recompile-directory` never deletes one.
 - `package/helm/helm-autoloads.el`, which `make compile` regenerates. `loaddefs-generate` rewrites the file only when a helm source is newer, and helm's `autoloads` target has no prerequisites to force the rebuild, so upgrading Emacs alone leaves the file in an older format that Emacs 30 and later warn about at startup.
 
 `make update` does not touch the tree-sitter grammars. Run `make grammars` when `init/init-treesit-grammars.el` changes.
