@@ -1,5 +1,5 @@
 ;;; Emacs configuration
-;;; requirement: emacs >= 24.3
+;;; requirement: emacs >= 30
 
 ;; (byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
 
@@ -11,9 +11,6 @@
 
 (add-to-list 'load-path "~/.emacs.d/init")
 (add-to-list 'load-path "~/.emacs.d/package")
-
-;; For Emacs 28 native-comp
-;; (require 'init-native-comp)
 
 ;; Theme
 (require 'init-theme)
@@ -33,12 +30,6 @@
 ;; https://github.com/joostkremers/visual-fill-column
 (require 'init-visual-fill-column)
 
-;; auto complete
-;; (require 'init-auto-complete)
-
-;; yasnippet
-;; (require 'init-yasnippet)
-
 ;; corfu
 ;; Compact inline completion popup; uses popon in terminal Emacs to
 ;; avoid the line-number / wide-CJK display artifacts caused by
@@ -57,10 +48,6 @@
 ;; https://github.com/rmm5t/insert-time.el
 (require 'init-insert-time)
 
-;; jinja2-mode
-;; https://github.com/paradoxxxzero/jinja2-mode
-;; (require 'init-jinja2-mode)
-
 ;; indent-bars
 (require 'init-indent-bars)
 
@@ -68,10 +55,6 @@
 ;; http://jblevins.org/projects/markdown-mode/
 ;; requirements: gfm preview: https://github.com/Gagle/Node-GFM
 (require 'init-markdown-mode)
-
-;; ESS - Emacs Speaks Statistics
-;; requirements: R
-;; (require 'init-ess)
 
 ;; diff-mode-: extension to 'diff-mode.el'
 ;; change highlight colors
@@ -103,9 +86,6 @@
 ;; ctrl-g prompt files.
 (require 'init-server)
 
-;; org mode
-;; (require 'init-org-mode)
-
 ;; hightlight symbol
 (require 'init-highlight-symbol)
 
@@ -134,10 +114,6 @@
 
 ;; undo tree
 (require 'init-undo-tree)
-
-;; AUCTex (LaTeX)
-;; requirements: texlive-full
-;; (require 'init-auctex)
 
 ;; Moz
 ;; (require 'init-moz)
@@ -184,9 +160,6 @@
 ;; php-mode
 ;; https://github.com/ejmr/php-mode
 (require 'init-php-mode)
-
-;; js-mode js2-mode
-;; (require 'init-js-mode)
 
 ;; Modern JS/TS via Emacs 30 built-in treesit
 (require 'init-js-ts)

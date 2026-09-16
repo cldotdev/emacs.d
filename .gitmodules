@@ -1,9 +1,3 @@
-[submodule "package/yasnippet/snippets"]
-        path = package/yasnippet/snippets
-        url = https://github.com/AndreaCrotti/yasnippet-snippets.git
-[submodule "yasmate"]
-        path = package/yasnippet/yasmate
-        url = https://github.com/capitaomorte/yasmate.git
 [submodule "package/slime"]
 	path = package/slime
 	url = https://github.com/slime/slime.git
@@ -46,9 +40,6 @@
 [submodule "package/pyvenv"]
 	path = package/pyvenv
 	url = https://github.com/jorgenschaefer/pyvenv.git
-[submodule "package/auto-complete"]
-	path = package/auto-complete
-	url = https://github.com/auto-complete/auto-complete.git
 [submodule "package/magit"]
 	path = package/magit
 	url = https://github.com/magit/magit.git
