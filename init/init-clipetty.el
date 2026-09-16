@@ -94,7 +94,7 @@ CUT-FN is the unadvised `clipetty-cut'; STRING is the latest kill text.")
 (defun my/clipetty--flush-pending ()
   "Emit the deferred kill via the captured `clipetty-cut' body."
   (setq my/clipetty--idle-timer nil)
-  (when-let ((pending my/clipetty--pending))
+  (when-let* ((pending my/clipetty--pending))
     (setq my/clipetty--pending nil)
     ;; Pass `ignore' as the cut-chain tail: intermediate kills already
     ;; funcalled the real tail, so we only need the OSC 52 emission here.

@@ -237,7 +237,7 @@ visiting renamed files that have no content changes, and also handles
 This fixes issues where magit-status is called from a buffer whose
 default-directory is not inside a git repository, causing subsequent
 operations like visiting files to fail with 'Not inside Git repository' error."
-  (when-let ((toplevel (magit-toplevel)))
+  (when-let* ((toplevel (magit-toplevel)))
     (setq-local default-directory toplevel)))
 
 (advice-add 'magit-status-setup-buffer :after

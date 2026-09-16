@@ -67,7 +67,7 @@
     (cl-loop for row from 0 to (1- (min vertico-count vertico--total)) collect
              (let ((line (list "\n")))
                (cl-loop for col from (1- vertico-grid--columns) downto 0 do
-                        (when-let ((cand (nth (+ row (* col vertico-count)) cands)))
+                        (when-let* ((cand (nth (+ row (* col vertico-count)) cands)))
                           (push cand line)
                           (when (> col 0)
                             (push vertico-grid-separator line)
