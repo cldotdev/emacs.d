@@ -355,16 +355,6 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
 (with-eval-after-load 'window-numbering
   (window-numbering-mode 1))
 
-;; Smex is a M-x enhancement for Emacs. Built on top of Ido,
-;; it provides a convenient interface to your recently and most
-;; frequently used commands. And to all the other commands, too.
-;; (require 'smex)
-;; (smex-initialize)
-;; (global-set-key (kbd "M-x") 'smex)
-;; (global-set-key (kbd "M-X") 'smex-major-mode-commands)
-;; ;; This is your old M-x.
-;; (global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
-
 ;; Save minibuffer history
 (savehist-mode t)
 
