@@ -2,10 +2,10 @@
 
 ;;; Commentary:
 
-;; In terminal Emacs the popup is rendered with popon (via
-;; corfu-terminal) instead of a child frame, which avoids the
-;; line-number / wide-CJK display artifacts caused by company-mode's
-;; pseudo-tooltip overlay.
+;; Emacs 31 draws child frames on a terminal, so Corfu draws the popup
+;; there too.  Earlier versions fall back to popon (via corfu-terminal)
+;; in a terminal, which avoids the line-number / wide-CJK display
+;; artifacts caused by company-mode's pseudo-tooltip overlay.
 
 ;;; Code:
 
@@ -26,6 +26,7 @@
 
 (declare-function corfu-terminal-mode "corfu-terminal" (&optional arg))
 (declare-function corfu--popup-hide "corfu" ())
+(declare-function corfu--popup-support-p "corfu" ())
 (defvar corfu-terminal--last-position)
 
 (setq corfu-auto t
@@ -127,7 +128,9 @@
     (setq corfu-terminal--last-position nil)
     (corfu--popup-hide)))
 
-(unless (display-graphic-p)
+;; Child frames became available on terminals in Emacs 31; popon is
+;; the fallback for everything older.
+(unless (corfu--popup-support-p)
   (require 'corfu-terminal)
   (advice-add 'corfu--exhibit
               :before #'init-corfu--hide-terminal-popup-before-exhibit)
