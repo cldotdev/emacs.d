@@ -408,21 +408,6 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
 (if (fboundp 'blink-cursor-mode)
     (blink-cursor-mode 0))
 
-;; Font settings
-;; (cond
-;;  ((string-equal system-type "darwin")
-;;   (progn
-;;     (add-to-list 'default-frame-alist '(font . "Monaco-14"))
-;;     (set-fontset-font "fontset-default" 'big5' ("Heiti TC" . "unicode-bmp"))))
-;;  ((string-equal system-type "gnu/linux")
-;;   (progn
-;;     (add-to-list 'default-frame-alist '(font . "Inconsolata-14"))))
-;;  ((string-equal system-type "windows-nt")
-;;   (progn
-;;     (add-to-list 'default-frame-alist '(font . "Consolas-14"))
-;;     (set-fontset-font "fontset-default" 'big5' ("微軟正黑體" . "unicode-bmp"))))
-;;  )
-
 ;; Launch emacsclient maximized from the commandline
 ;; 1. $ emacsclient -nc -F "((fullscreen . maximized))"
 ;; 2. $ emacsclient -nc -F "((fullscreen . fullboth))"
