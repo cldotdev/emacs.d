@@ -1,4 +1,4 @@
-.PHONY: all compile grammars grammars-clean
+.PHONY: all update compile grammars grammars-clean
 pkg_dir = $(shell pwd)/package
 ts_dir = $(shell pwd)/tree-sitter
 magit_dir = ${pkg_dir}/magit
@@ -17,6 +17,39 @@ llama_dir = ${pkg_dir}/llama
 cond_let_dir = ${pkg_dir}/cond-let
 
 all: compile grammars
+
+# Refresh a checkout from upstream. Run `make grammars' as well when
+# init/init-treesit-grammars.el changes.
+update:
+	git pull --ff-only
+	git submodule sync --recursive
+	git submodule update --init --recursive
+	@# `git pull' cannot rmdir the work tree of a submodule that upstream
+	@# removed, and `git submodule update' ignores it, so it stays in
+	@# package/ forever. Compare against `submodule status --recursive',
+	@# because it reaches submodules nested inside another submodule, which
+	@# the superproject's own index knows nothing about. A
+	@# `.git' file means git built the work tree; a hand-made clone has a
+	@# `.git' directory instead, so leave that one alone.
+	@registered="$$(git submodule status --recursive | awk '{print $$2}')"; \
+	find . -name .git -prune -print | grep -v '^\./\.git$$' | \
+		sed 's|^\./||; s|/\.git$$||' | \
+	while read -r dir; do \
+		printf '%s\n' "$$registered" | grep -qxF "$$dir" && continue; \
+		if [ -f "$$dir/.git" ]; then \
+			echo "pruning unregistered submodule $$dir"; \
+			rm -rf "$$dir"; \
+		else \
+			echo "note: $$dir holds a git repository git does not track; left alone"; \
+		fi; \
+	done
+	@# `load' takes a `.elc' over its `.el' regardless of timestamps, and
+	@# `byte-recompile-directory' never deletes one whose source is gone.
+	@find . -name '*.elc' -not -path './.git/*' | \
+		while read -r elc; do \
+			test -f "$${elc%c}" || { echo "pruning orphaned $$elc"; rm -f "$$elc"; }; \
+		done
+	$(MAKE) compile
 
 compile:
 	emacs --batch --eval '(byte-recompile-directory ".")'

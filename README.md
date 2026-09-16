@@ -45,6 +45,20 @@
     make
     ```
 
+## Updating
+
+```bash
+cd ~/.emacs.d
+make update
+```
+
+`make update` pulls with `--ff-only`, syncs and updates every submodule recursively, and then runs `make compile`. It also removes two kinds of leftovers:
+
+- The work tree of a submodule that upstream removed. `git pull` cannot remove it (`warning: unable to rmdir`) and `git submodule update` ignores it, so otherwise it sits in `package/` forever. A directory that holds a git repository git did not create as a submodule work tree is reported and kept.
+- A `.elc` file whose `.el` is gone. This configuration leaves `load-prefer-newer` at nil, so `load` takes a `.elc` over its source regardless of timestamps, and `byte-recompile-directory` never deletes one.
+
+Run `make grammars` as well when `init/init-treesit-grammars.el` changes.
+
 ## Keymaps
 
 ### Global
