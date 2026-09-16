@@ -1,5 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
+(require 'markdown-mode)
 (require 'visual-fill-column)
+
+(declare-function comment-dwim-line "init-global" (&optional arg))
 
 (add-to-list 'auto-mode-alist
              '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . gfm-mode))
