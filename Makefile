@@ -4,7 +4,6 @@ ts_dir = $(shell pwd)/tree-sitter
 magit_dir = ${pkg_dir}/magit
 dash_dir = ${pkg_dir}/dash.el
 helm_dir = ${pkg_dir}/helm
-magit_popup_dir = ${pkg_dir}/magit-popup
 ghub_dir = ${pkg_dir}/ghub/lisp
 transient_dir = ${pkg_dir}/transient
 with_editor_dir = ${pkg_dir}/with-editor
@@ -61,7 +60,6 @@ compile:
 	cd ${magit_dir} && \
 		echo "LOAD_PATH = -L ${magit_dir}/lisp \
 		-L ${dash_dir} \
-		-L ${magit_popup_dir} \
 		-L ${ghub_dir} \
 		-L ${transient_dir}/lisp \
 		-L ${with_editor_dir}/lisp \

@@ -1,12 +1,6 @@
 [submodule "package/slime"]
 	path = package/slime
 	url = https://github.com/slime/slime.git
-[submodule "package/skewer-mode"]
-	path = package/skewer-mode
-	url = https://github.com/skeeto/skewer-mode.git
-[submodule "package/emacs-web-server"]
-	path = package/emacs-web-server
-	url = https://github.com/skeeto/emacs-web-server.git
 [submodule "package/f.el"]
 	path = package/f.el
 	url = https://github.com/rejeep/f.el.git
@@ -19,9 +13,6 @@
 [submodule "package/flycheck"]
 	path = package/flycheck
 	url = https://github.com/flycheck/flycheck.git
-[submodule "package/swift-mode"]
-	path = package/swift-mode
-	url = https://github.com/chrisbarrett/swift-mode.git
 [submodule "package/Highlight-Indentation-for-Emacs"]
 	path = package/Highlight-Indentation-for-Emacs
 	url = https://github.com/antonj/Highlight-Indentation-for-Emacs.git
@@ -43,21 +34,9 @@
 [submodule "package/yard-mode.el"]
 	path = package/yard-mode.el
 	url = https://github.com/pd/yard-mode.el.git
-[submodule "package/robe"]
-	path = package/robe
-	url = https://github.com/dgutov/robe.git
-[submodule "package/inf-ruby"]
-	path = package/inf-ruby
-	url = https://github.com/nonsequitur/inf-ruby.git
-[submodule "package/coffee-mode"]
-	path = package/coffee-mode
-	url = https://github.com/defunkt/coffee-mode.git
 [submodule "package/osx-clipboard-mode"]
 	path = package/osx-clipboard-mode
 	url = https://github.com/joddie/osx-clipboard-mode.git
-[submodule "package/js-doc"]
-	path = package/js-doc
-	url = https://github.com/mooz/js-doc.git
 [submodule "package/scss-mode"]
 	path = package/scss-mode
 	url = https://github.com/antonj/scss-mode.git
@@ -70,39 +49,18 @@
 [submodule "package/php-mode"]
 	path = package/php-mode
 	url = https://github.com/ejmr/php-mode.git
-[submodule "package/js2-mode"]
-	path = package/js2-mode
-	url = https://github.com/mooz/js2-mode.git
-[submodule "package/enhanced-ruby-mode"]
-	path = package/enhanced-ruby-mode
-	url = https://github.com/zenspider/enhanced-ruby-mode.git
 [submodule "package/ghub"]
 	path = package/ghub
 	url = https://github.com/magit/ghub.git
 [submodule "package/graphql.el"]
 	path = package/graphql.el
 	url = https://github.com/vermiculus/graphql.el.git
-[submodule "package/magit-popup"]
-	path = package/magit-popup
-	url = https://github.com/magit/magit-popup.git
 [submodule "package/treepy.el"]
 	path = package/treepy.el
 	url = https://github.com/volrath/treepy.el.git
 [submodule "package/with-editor"]
 	path = package/with-editor
 	url = https://github.com/magit/with-editor.git
-[submodule "package/smartparens"]
-	path = package/smartparens
-	url = https://github.com/Fuco1/smartparens
-[submodule "package/names"]
-	path = package/names
-	url = https://github.com/Malabarba/names.git
-[submodule "package/unicode-escape.el"]
-	path = package/unicode-escape.el
-	url = https://github.com/kosh04/unicode-escape.el.git
-[submodule "package/go-mode.el"]
-	path = package/go-mode.el
-	url = https://github.com/dominikh/go-mode.el.git
 [submodule "package/libegit2"]
 	path = package/libegit2
 	url = https://github.com/magit/libegit2.git
@@ -112,9 +70,6 @@
 [submodule "package/nord-emacs"]
 	path = package/nord-emacs
 	url = https://github.com/cldotdev/nord-emacs.git
-[submodule "package/zenburn-emacs"]
-	path = package/zenburn-emacs
-	url = https://github.com/bbatsov/zenburn-emacs.git
 [submodule "package/dumb-jump"]
 	path = package/dumb-jump
 	url = https://github.com/jacktasia/dumb-jump.git
@@ -136,9 +91,6 @@
 [submodule "package/compat"]
 	path = package/compat
 	url = https://github.com/emacs-compat/compat.git
-[submodule "package/emacs-sql-indent"]
-	path = package/emacs-sql-indent
-	url = https://github.com/alex-hhh/emacs-sql-indent.git
 [submodule "package/emacs-hcl-mode"]
 	path = package/emacs-hcl-mode
 	url = https://github.com/syohex/emacs-hcl-mode.git
@@ -175,9 +127,6 @@
 [submodule "package/sqlformat"]
 	path = package/sqlformat
 	url = https://github.com/purcell/sqlformat.git
-[submodule "package/topsy.el"]
-	path = package/topsy.el
-	url = https://github.com/alphapapa/topsy.el.git
 [submodule "package/llama"]
 	path = package/llama
 	url = https://github.com/tarsius/llama.git

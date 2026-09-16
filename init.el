@@ -68,17 +68,9 @@
 ;; requirements: gfm preview: https://github.com/Gagle/Node-GFM
 (require 'init-markdown-mode)
 
-;; diff-mode-: extension to 'diff-mode.el'
-;; change highlight colors
-;; (require 'init-diff-mode-)
-
 ;; multiple cursors
 ;; https://github.com/emacsmirror/multiple-cursors
 (require 'init-multiple-cursors)
-
-;; ace jump mode
-;; https://github.com/winterTTr/ace-jump-mode
-;; (require 'init-ace-jump-mode)
 
 ;; Tree-sitter grammar repos / pinned revisions (single source of truth,
 ;; consumed by both interactive Emacs and `make grammars').
@@ -104,19 +96,11 @@
 ;; vlf-mode - view large files
 (require 'init-vlf-mode)
 
-;; ido mode
-;; version: 1.31.2.70
-;; http://cvs.savannah.gnu.org/viewvc/*checkout*/emacs/emacs/lisp/ido.el?revision=1.31.2.70
-;; (require 'init-ido-mode)
-
 (require 'init-vertico)
 
 ;; visible mark
 ;; http://retroj.net/visible-mark
 (require 'init-visible-mark)
-
-;; predictive mode
-;; (require 'init-predictive-mode)
 
 ;; La Carte
 (require 'init-larcarte)
@@ -127,33 +111,13 @@
 ;; undo tree
 (require 'init-undo-tree)
 
-;; Moz
-;; (require 'init-moz)
-
-;; zotero
-;; require MozRepl for firefox: https://github.com/bard/mozrepl/wiki
-;; after installing MozRepl: FireFox -> Tools -> MozRepl -> Start
-;; (require 'init-zotero-minor-mode)
-
 ;; erc
 (require 'init-erc)
-
-;; ack
-;; https://github.com/leoliu/ack-el
-;; (require 'ack)
 
 ;; slime
 ;; http://www.common-lisp.net/project/slime/
 ;; https://github.com/slime/slime
 (require 'init-slime)
-
-;; python-django
-;; https://github.com/fgallina/python-django.el
-;; (require 'init-python-django)
-
-;; inf-mongo
-;; https://github.com/tobiassvn/inf-mongo
-;; (require 'init-inf-mongo)
 
 (require 'init-makefile-mode)
 
@@ -175,31 +139,19 @@
 ;; Modern JS/TS via Emacs 30 built-in treesit
 (require 'init-js-ts)
 
-;; go-mode
 (require 'init-go-mode)
 (require 'init-go-mod-mode)
 
 ;; rust-mode
 (require 'init-rust-mode)
 
-;; swift-mode
-;; (require 'init-swift-mode)
-
-;; yaml-mode
-;; The emacs major mode for editing files in the YAML data serialization format.
-;; https://github.com/yoshiki/yaml-mode
 (require 'init-yaml-mode)
 
-;; json-mode
-;; Major mode for editing JSON files with emacs
-;; https://github.com/joshwnj/json-mode
 (require 'init-json-mode)
 
 ;; toml-mode
 (require 'init-toml)
 
-;; dockerfile-mode
-;; https://github.com/spotify/dockerfile-mode
 (require 'init-dockerfile-mode)
 
 ;; csv-mode
@@ -209,43 +161,19 @@
 ;; ruby-mode
 (require 'init-ruby-mode)
 
-;; coffee-mode
-;; https://github.com/defunkt/coffee-mode
-;; (require 'init-coffee-mode)
-
 ;; nginx-mode
 ;; https://github.com/ajc/nginx-mode
 (require 'init-nginx-mode)
-
-;; Interactively resizing windows
-;; Source: https://www.emacswiki.org/emacs/WindowResize
-;; Not compatible with Emacs 28
-;; (require 'init-iresize)
 
 ;; chinese-conv
 ;; A front end in emacs to convert between simplified and traditional Chinese with opencc or cconv.
 ;; https://github.com/gucong/emacs-chinese-conv
 (require 'init-chinese-conv)
 
-;; swagger-mode
-;; Swagger Mode integrates Swagger Codegen into Emacs as a Minor Mode.
-;; https://github.com/Nooby/swagger-mode
-;; (require 'init-swagger-mode)
-
-;; Smartparens
-;; Minor mode for Emacs that deals with parens pairs and tries to be smart about it.
-;; https://github.com/Fuco1/smartparens
-;; (require 'init-smartparens)
-
 ;; dumb-jump
 ;; an Emacs "jump to definition" package for 50+ languages
 ;; https://github.com/jacktasia/dumb-jump
 (require 'init-dumb-jump)
-
-;; emacs-sql-indent
-;; Syntax based indentation for SQL files for GNU Emacs
-;; https://github.com/alex-hhh/emacs-sql-indent
-;; (require 'init-sql-indent)
 
 ;; sql-mode
 (require 'init-sql-mode)
@@ -259,11 +187,6 @@
 ;; An Emacs minor mode that highlights numeric literals in source code.
 ;; https://github.com/Fanael/highlight-numbers
 (require 'init-highlight-numbers)
-
-;; topsy
-;; https://github.com/alphapapa/topsy.el
-;; This library shows a sticky header at the top of the window.
-;; (require 'init-topsy)
 
 ;; tree-sitter
 ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter
