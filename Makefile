@@ -49,6 +49,10 @@ update:
 		while read -r elc; do \
 			test -f "$${elc%c}" || { echo "pruning orphaned $$elc"; rm -f "$$elc"; }; \
 		done
+	@# `loaddefs-generate' rewrites the file only when a helm source is
+	@# newer, and helm's `autoloads' target has no prerequisites to force
+	@# the rebuild, so upgrading Emacs alone never updates the header.
+	rm -f ${helm_dir}/helm-autoloads.el
 	$(MAKE) compile
 
 compile:
