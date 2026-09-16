@@ -1,4 +1,4 @@
-;;; highlight-symbol.el --- automatic and manual symbol highlighting
+;;; highlight-symbol.el --- automatic and manual symbol highlighting  -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2007-2009 Nikolaj Schumacher
 ;;
@@ -82,6 +82,10 @@
 
 (require 'thingatpt)
 (require 'hi-lock)
+
+;; `highlight-symbol-mode' binds this old hi-lock variable, which hi-lock
+;; no longer defines; declared here so the binding stays dynamic.
+(defvar hi-lock-archaic-interface-message-used)
 (eval-when-compile (require 'cl))
 
 (push "^No symbol at point$" debug-ignored-errors)

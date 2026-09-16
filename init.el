@@ -1,4 +1,4 @@
-;;; Emacs configuration
+;;; Emacs configuration  -*- lexical-binding: t -*-
 ;;; requirement: emacs >= 30
 
 ;; (byte-recompile-directory (expand-file-name "~/.emacs.d") 0)
@@ -11,6 +11,18 @@
 
 (add-to-list 'load-path "~/.emacs.d/init")
 (add-to-list 'load-path "~/.emacs.d/package")
+
+;; These packages are vendored as submodules, so a `lexical-binding'
+;; cookie added here would be lost on the next `git submodule update'.
+;; Listing each file leaves the warning in place for everything else.
+(setq warning-inhibit-types
+      '((files missing-lexbind-cookie "~/.emacs.d/package/imenu-list/imenu-list.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/nord-emacs/nord-theme.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/osx-clipboard-mode/osx-clipboard.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/parent-mode/parent-mode.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/s.el/s.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/slime/slime-autoloads.el")
+        (files missing-lexbind-cookie "~/.emacs.d/package/yard-mode.el/yard-mode.el")))
 
 ;; Theme
 (require 'init-theme)

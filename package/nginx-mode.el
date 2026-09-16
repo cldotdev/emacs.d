@@ -1,4 +1,4 @@
-;;; nginx-mode.el --- major mode for editing nginx config files
+;;; nginx-mode.el --- major mode for editing nginx config files  -*- lexical-binding: t -*-
 
 ;; Copyright 2010 Andrew J Cosgriff <andrew@cosgriff.name>
 

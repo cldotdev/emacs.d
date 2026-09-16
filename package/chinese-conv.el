@@ -1,4 +1,4 @@
-;;; chinese-conv.el --- Conversion between Chinese Characters with opencc or cconv
+;;; chinese-conv.el --- Conversion between Chinese Characters with opencc or cconv  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012-2016 Cong Gu
 

@@ -1,4 +1,4 @@
-;;; golint.el --- lint for the Go source code
+;;; golint.el --- lint for the Go source code  -*- lexical-binding: t -*-
 
 ;; Copyright 2013 The Go Authors. All rights reserved.
 

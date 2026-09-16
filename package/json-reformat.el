@@ -1,4 +1,4 @@
-;;; json-reformat.el --- Reformatting tool for JSON
+;;; json-reformat.el --- Reformatting tool for JSON  -*- lexical-binding: t -*-
 
 ;; Author: Wataru MIYAGUNI <gonngo@gmail.com>
 ;; URL: https://github.com/gongo/json-reformat

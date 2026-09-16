@@ -1,4 +1,4 @@
-;;; window-numbering.el --- Numbered window shortcuts
+;;; window-numbering.el --- Numbered window shortcuts  -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2006-2007, 2013 Nikolaj Schumacher <bugs * nschum , de>
 ;;

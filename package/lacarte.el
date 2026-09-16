@@ -1,4 +1,4 @@
-;;; lacarte.el --- Execute menu items as commands, with completion.
+;;; lacarte.el --- Execute menu items as commands, with completion.  -*- lexical-binding: t -*-
 ;;
 ;; Filename: lacarte.el
 ;; Description: Execute menu items as commands, with completion.
@@ -363,6 +363,12 @@
 ;;; Code:
 
 (unless (fboundp 'replace-regexp-in-string) (require 'subr-21 nil t))
+
+;; Bound by `lacarte-execute-command' for Icicles to read; declared here so
+;; the bindings stay dynamic under lexical binding.
+(defvar icicle-special-candidate-regexp)
+(defvar icicle-sort-comparer)
+(defvar icicle-sort-orders-alist)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
  

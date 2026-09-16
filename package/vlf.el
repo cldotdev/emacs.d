@@ -1,4 +1,4 @@
-;;; vlf.el --- View Large Files
+;;; vlf.el --- View Large Files  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2006  Mathias Dahl
 
