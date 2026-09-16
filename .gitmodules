@@ -22,9 +22,6 @@
 [submodule "package/swift-mode"]
 	path = package/swift-mode
 	url = https://github.com/chrisbarrett/swift-mode.git
-[submodule "snippets"]
-	path = snippets
-	url = https://github.com/cldotdev/yasnippet-snippets.git
 [submodule "package/Highlight-Indentation-for-Emacs"]
 	path = package/Highlight-Indentation-for-Emacs
 	url = https://github.com/antonj/Highlight-Indentation-for-Emacs.git
