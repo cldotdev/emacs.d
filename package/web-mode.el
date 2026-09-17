@@ -1,11 +1,11 @@
 ;;; web-mode.el --- major mode for editing web templates -*- coding: utf-8; lexical-binding: t; -*-
 
-;; Copyright 2011-2023 François-Xavier Bois
+;; Copyright 2011-2026 François-Xavier Bois
 
-;; Version: 17.3.14
+;; Version: 17.3.25
 ;; Author: François-Xavier Bois
 ;; Maintainer: François-Xavier Bois <fxbois@gmail.com>
-;; Package-Requires: ((emacs "23.1"))
+;; Package-Requires: ((emacs "24.3.1"))
 ;; URL: https://web-mode.org
 ;; Repository: http://github.com/fxbois/web-mode
 ;; Created: July 2011
@@ -23,7 +23,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "17.3.14"
+(defconst web-mode-version "17.3.25"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -44,7 +44,7 @@
 
 (defcustom web-mode-block-padding 0
   "Multi-line block (php, ruby, java, python, asp, etc.) left padding.
-   -1 to have to code aligned on the column 0."
+   -1 to have the code aligned on the column 0."
   :type '(choice (integer :tags "Number of spaces")
           (const :tags "No indent" nil))
   :group 'web-mode)
@@ -55,13 +55,15 @@
           (const :tags "No indent" nil))
   :group 'web-mode)
 
-(defcustom web-mode-script-padding web-mode-part-padding
+(defcustom web-mode-script-padding
+  (if (and (boundp 'web-mode-part-padding) web-mode-part-padding) 1)
   "Script element left padding."
   :type '(choice (integer :tags "Number of spaces")
           (const :tags "No indent" nil))
   :group 'web-mode)
 
-(defcustom web-mode-style-padding web-mode-part-padding
+(defcustom web-mode-style-padding
+  (if (and (boundp 'web-mode-part-padding) web-mode-part-padding) 1)
   "Style element left padding."
   :type '(choice (integer :tags "Number of spaces")
           (const :tags "No indent" nil))
@@ -71,49 +73,58 @@
   "Html attribute indentation level."
   :type '(choice (integer :tags "Number of spaces")
           (const :tags "Default" nil))
-  :safe #'(lambda (v) (or (integerp v) (booleanp v)))
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-attr-indent-offset
+     'safe-local-variable #'(lambda (v) (or (integerp v) (null v))))
 
 (defcustom web-mode-attr-value-indent-offset nil
   "Html attribute value indentation level."
   :type '(choice (integer :tags "Number of spaces")
           (const :tags "Default" nil))
-  :safe #'(lambda (v) (or (integerp v) (booleanp v)))
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-attr-value-indent-offset
+     'safe-local-variable #'(lambda (v) (or (integerp v) (null v))))
 
 (defcustom web-mode-markup-indent-offset
   (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "Html indentation level."
   :type 'integer
-  :safe #'integerp
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-markup-indent-offset 'safe-local-variable #'integerp)
 
 (defcustom web-mode-markup-comment-indent-offset
   5
   "Html comment indentation level."
   :type 'integer
-  :safe #'integerp
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-markup-comment-indent-offset 'safe-local-variable #'integerp)
 
 (defcustom web-mode-css-indent-offset
   (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "CSS indentation level."
   :type 'integer
-  :safe #'integerp
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-css-indent-offset 'safe-local-variable #'integerp)
 
 (defcustom web-mode-code-indent-offset
   (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "Code (javascript, php, etc.) indentation level."
   :type 'integer
-  :safe #'integerp
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-code-indent-offset 'safe-local-variable #'integerp)
 
 (defcustom web-mode-sql-indent-offset 4
   "Sql (inside strings) indentation level."
   :type 'integer
-  :safe #'integerp
   :group 'web-mode)
+;;;###autoload
+(put 'web-mode-sql-indent-offset 'safe-local-variable #'integerp)
 
 (defcustom web-mode-enable-css-colorization (display-graphic-p)
   "In a CSS part, set background according to the color: #xxx, rgb(x,x,x)."
@@ -335,13 +346,13 @@ by a li open tag is valid)."
 (defcustom web-mode-jsx-depth-faces
   nil
   ;;'(web-mode-jsx-depth-1-face web-mode-jsx-depth-2-face web-mode-jsx-depth-3-face web-mode-jsx-depth-4-face web-mode-jsx-depth-5-face)
-  "Each jsx depth has is own face."
+  "Each jsx depth has its own face."
   :type '(repeat face)
   :group 'web-mode)
 
 (defcustom web-mode-commands-like-expand-region
   '(web-mode-mark-and-expand er/expand-region mc/mark-next-like-this mc/mark-previous-like-this)
-  "Add commmand here if you have some wrapper function for er/expand-region"
+  "Add command here if you have some wrapper function for er/expand-region"
   :type '(repeat function)
   :group 'web-mode)
 
@@ -421,6 +432,15 @@ by a li open tag is valid)."
   :type '(repeat string)
   :group 'web-mode)
 
+(defcustom web-mode-engines-alist nil
+  "A list of filename patterns and corresponding `web-mode' engine.
+For example,
+\(setq web-mode-engines-alist
+       \\='((\"php\"    . \"\\\\.phtml\\\\\\='\")
+         (\"blade\"  . \"\\\\.blade\\\\.\")))"
+  :type '(alist :key-type string :value-type string)
+  :group 'web-mode)
+
 ;;---- FACES -------------------------------------------------------------------
 
 (defface web-mode-error-face
@@ -438,11 +458,6 @@ by a li open tag is valid)."
   "Face for preprocessor commands."
   :group 'web-mode-faces)
 
-(defface web-mode-preprocessor-face
-    '((t :inherit font-lock-preprocessor-face))
-  "Face for preprocessor."
-  :group 'web-mode-faces)
-
 (defface web-mode-block-delimiter-face
     '((t :inherit font-lock-preprocessor-face))
   "Face for block delimiters."
@@ -450,7 +465,7 @@ by a li open tag is valid)."
 
 (defface web-mode-block-control-face
     '((t :inherit font-lock-preprocessor-face))
-  "Face for preprocessor."
+  "Face for block control statements."
   :group 'web-mode-faces)
 
 (defface web-mode-builtin-face
@@ -759,7 +774,7 @@ by a li open tag is valid)."
 (defface web-mode-inlay-face
     '((((class color) (min-colors 88) (background dark))  :background "Black")
       (((class color) (min-colors 88) (background light)) :background "LightYellow1")
-      (((class color) (min-colors 16) (background dark))  :background "Brey18")
+      (((class color) (min-colors 16) (background dark))  :background "Grey18")
       (((class color) (min-colors 16) (background light)) :background "LightYellow1")
       (((class color) (min-colors 8))                     :background "Black")
       (((type tty) (class mono))                          :inverse-video t)
@@ -806,12 +821,12 @@ Must be used in conjunction with web-mode-enable-block-face."
 
 (defface web-mode-italic-face
     '((t :slant italic))
-  "bold face."
+  "italic face."
   :group 'web-mode-faces)
 
 (defface web-mode-underline-face
     '((t :underline t))
-  "bold face."
+  "underline face."
   :group 'web-mode-faces)
 
 (defface web-mode-current-element-highlight-face
@@ -929,13 +944,13 @@ Must be used in conjunction with web-mode-enable-block-face."
         'syntax-table)
   "Text properties used for code regions/tokens and html nodes.")
 
-(defvar web-mode-start-tag-regexp "<\\([[:alpha:]][[:alnum:].:_-]*\\|>\\)"
+(defvar web-mode-start-tag-regexp "<\\([[:alnum:].:_-]+\\|>\\)"
   "Regular expression for HTML/XML start tag.")
 
-(defvar web-mode-tag-regexp "</?\\([[:alpha:]][[:alnum:].:_-]*\\)"
+(defvar web-mode-tag-regexp "</?\\([[:alnum:].:_-]+\\)"
   "Regular expression for HTML/XML tag.")
 
-(defvar web-mode-dom-regexp "<\\(/?>\\|/?[[:alpha:]][[:alnum:].:_-]*\\|!--\\|!\\[CDATA\\[\\|!doctype\\|!DOCTYPE\\|\?xml\\)")
+(defvar web-mode-dom-regexp "<\\(/?>\\|/?[[:alnum:].:_-]+\\|!--\\|!\\[CDATA\\[\\|!doctype\\|!DOCTYPE\\|\?xml\\)")
 
 (defvar web-mode-whitespaces-regexp
   "^[ \t]\\{2,\\}$\\| \t\\|\t \\|[ \t]+$\\|^[ \n\t]+\\'\\|^[ \t]?[\n]\\{2,\\}"
@@ -988,7 +1003,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("json-t"           . ())
     ("jsp"              . ("grails"))
     ("mako"             . ())
-    ("marko"            . ())
+    ("marko"            . ("pandoc"))
     ("mason"            . ("poet"))
     ("lsp"              . ("lisp"))
     ("mojolicious"      . ())
@@ -1099,13 +1114,6 @@ For example,
 (setq web-mode-content-types-alist
   \\='((\"json\" . \"/some/path/.*\\.api\\\\='\")
     (\"jsx\"  . \"/some/react/path/.*\\.js[x]?\\\\='\")))")
-
-(defvar web-mode-engines-alist nil
-  "A list of filename patterns and corresponding `web-mode' engine.
-For example,
-\(setq web-mode-engines-alist
-       \\='((\"php\"    . \"\\\\.phtml\\\\\\='\")
-         (\"blade\"  . \"\\\\.blade\\\\.\")))")
 
 (defvar web-mode-smart-quotes
   '("«" . "»")
@@ -1374,7 +1382,7 @@ For example,
                  ("ifequal"    . "{% ifequal | %}\n\n{% endifequal %}")
                  ("ifnotequal" . "{% ifnotequal | %}\n\n{% endifnotequal %}")
                  ("js"         . "{% javascript | %}\n\n{% endjavascript %}")
-                 ("schema"     . "{% javascript | %}\n\n{% endschema %}")
+                 ("schema"     . "{% schema | %}\n\n{% endschema %}")
                  ("safe"       . "{% safe | %}\n\n{% endsafe %}")))
     ("mako" . (("if"        . "% if |:\n% endif")
                ("for"       . "% for | in :\n% endfor")
@@ -1740,7 +1748,7 @@ shouldn't be moved back.)")
       "localize" "logger" "number_field"
       "number_field_tag" "number_to_human" "params" "path_to_audio"
       "path_to_video" "phone_field" "phone_field_tag" "provide"
-      "range_field" "range_field_tag" "raw" "render" "request"
+      "range_field" "range_field_tag" "raw" "render" "render_to_string" "request"
       "request_forgery_protection_token" "response" "safe_concat"
       "safe_join" "search_field" "search_field_tag"
       "session" "t" "telephone_field" "telephone_field_tag"
@@ -1853,7 +1861,7 @@ shouldn't be moved back.)")
    '(
 
      "assets" "autoescape"
-     "block" "blocktrans"
+     "block" "blocktrans" "blocktranslate"
      "cache" "call" "capture" "comment"
      "draw"
      "embed"
@@ -1868,7 +1876,7 @@ shouldn't be moved back.)")
      "with"
 
      "endassets" "endautoescape"
-     "endblock" "endblocktrans"
+     "endblock" "endblocktrans" "endblocktranslate"
      "endcache" "endcall" "endcapture" "endcomment"
      "draw"
      "endembed"
@@ -2021,7 +2029,7 @@ shouldn't be moved back.)")
    '("@\\([[:alnum:]_]+\\)\\_>" 0 'web-mode-keyword-face)
    '("\\([[:alnum:]]+\\)[`]" 0 'web-mode-preprocessor-face)
    (cons (concat "\\_<\\(function\\*\\)\\_>") '(1 'web-mode-keyword-face))
-   (cons (concat "\\([ \t}{(]\\|^\\)\\(" web-mode-javascript-keywords "\\)\\_>") '(2 'web-mode-keyword-face))
+   (cons (concat "\\([ \t}{(\\[]\\|^\\)\\(" web-mode-javascript-keywords "\\)\\_>") '(2 'web-mode-keyword-face))
    (cons (concat "\\_<\\(" web-mode-javascript-constants "\\)\\_>") '(0 'web-mode-constant-face))
    '("\\_<\\([$]\\)(" 1 'web-mode-type-face)
    '("\\_<\\(new\\|instanceof\\|class\\|extends\\|import\\) \\([[:alnum:]_.]+\\)\\_>" 2 'web-mode-type-face)
@@ -2488,7 +2496,7 @@ shouldn't be moved back.)")
   (list
    (cons (concat "\\_<\\(" web-mode-php-keywords "\\)\\_>") '(0 'web-mode-keyword-face))
    (cons (concat "\\_<\\(" web-mode-php-types "\\)\\_>") '(1 'web-mode-type-face))
-   (cons (concat "\\_<\\(" web-mode-php-constants "\\)\\_>") '(0 'web-mode-constant-face))
+   (cons (concat "\\(" web-mode-php-constants "\\)") '(0 'web-mode-constant-face))
    '("function[ ]+\\([[:alnum:]_]+\\)" 1 'web-mode-function-name-face)
    '("\\_<\\([[:alnum:]_]+\\)[ ]?(" 1 'web-mode-function-call-face)
    '("[[:alnum:]_][ ]?::[ ]?\\([[:alnum:]_]+\\)" 1 'web-mode-constant-face)
@@ -2752,24 +2760,24 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 (eval-and-compile
 
   ;; compatibility with emacs < 23
-  (defun web-mode-string-match-p (regexp string &optional start)
-    "Same as `string-match' except it does not change the match data."
-    (save-match-data
-      (string-match regexp string start)))
+  ;; (defun web-mode-string-match-p (regexp string &optional start)
+  ;;   "Same as `string-match' except it does not change the match data."
+  ;;   (save-match-data
+  ;;     (string-match regexp string start)))
 
-  (unless (fboundp 'string-match-p)
-    (fset 'string-match-p (symbol-function 'web-mode-string-match-p)))
+  ;; (unless (fboundp 'string-match-p)
+  ;;   (fset 'string-match-p (symbol-function 'web-mode-string-match-p)))
 
   ;; compatibility with emacs < 23.3
-  (if (fboundp 'with-silent-modifications)
-      (defalias 'web-mode-with-silent-modifications 'with-silent-modifications)
-      (defmacro web-mode-with-silent-modifications (&rest body)
-        `(let ((old-modified-p (buffer-modified-p))
-               (inhibit-modification-hooks t)
-               (buffer-undo-list t))
-           (unwind-protect
-                ,@body
-             (restore-buffer-modified-p old-modified-p)))))
+  ;; (if (fboundp 'with-silent-modifications)
+  ;;     (defalias 'web-mode-with-silent-modifications 'with-silent-modifications)
+  ;;     (defmacro web-mode-with-silent-modifications (&rest body)
+  ;;       `(let ((old-modified-p (buffer-modified-p))
+  ;;              (inhibit-modification-hooks t)
+  ;;              (buffer-undo-list t))
+  ;;          (unwind-protect
+  ;;               ,@body
+  ;;            (restore-buffer-modified-p old-modified-p)))))
 
   ;; compatibility with emacs < 24.3
   (defun web-mode-buffer-narrowed-p ()
@@ -2901,6 +2909,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     (add-hook 'after-save-hook        #'web-mode-on-after-save t t)
     (add-hook 'change-major-mode-hook #'web-mode-on-exit nil t)
     (add-hook 'post-command-hook      #'web-mode-on-post-command nil t)
+    (add-hook 'hack-local-variables-hook #'web-mode-guess-engine-and-content-type t t)
 
     (cond
       ((boundp 'yas-after-exit-snippet-hook)
@@ -2919,7 +2928,6 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     (when web-mode-enable-sexp-functions
       (setq-local forward-sexp-function #'web-mode-forward-sexp))
 
-    (web-mode-guess-engine-and-content-type)
     (setq web-mode-change-beg (point-min)
           web-mode-change-end (point-max))
     (when (> (point-max) 256000)
@@ -3343,7 +3351,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
   ;;(message "scan-region: beg(%d) end(%d) content-type(%S)" beg end content-type)
   (setq web-mode-scan-beg beg
         web-mode-scan-end end)
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (save-excursion
      (save-restriction
        (save-match-data
@@ -3429,13 +3437,15 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
              (setq closing-string '("<\\?". "\\?>")))
            (cond
              ((looking-at-p "<?php")
-              (setq delim-open "<?php"))
+              (setq delim-open "<?php")
+              (setq delim-close "?>"))
              ((eq (char-after) ?\=)
-              (setq delim-open "<?="))
+              (setq delim-open "<?=")
+              (setq delim-close "?>"))
              (t
-              (setq delim-open "<?"))
+              (setq delim-open "<?")
+              (setq delim-close "?>"))
              ) ;cond
-           (setq delim-close "?>")
            ) ;php
 
           ((string= web-mode-engine "erb")
@@ -3817,7 +3827,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 
           ((string= web-mode-engine "vue")
            (cond
-             ((string-match-p "[:@][-[:alpha:]]+=\"" tagopen)
+             ((string-match-p "[:@][-[:alpha:].]+=\"" tagopen)
               (setq closing-string "\""
                     delim-open tagopen
                     delim-close "\""))
@@ -4277,24 +4287,26 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 
 (defun web-mode-blade-skip (pos)
   (let (regexp char inc continue found (reg-beg pos) (reg-end (point-max)))
+    ;;(message "pos=%S" pos)
     (goto-char pos)
     (forward-char)
     (skip-chars-forward "a-zA-Z0-9_-")
+    (skip-chars-forward " ")
     (when (eq (char-after) ?\()
       (setq regexp "[\"'()]"
             inc 0)
       (while (and (not found) (re-search-forward regexp reg-end t))
         (setq char (char-before))
-        ;;(message "pos=%S char=%c" (point) char)
+        ;;(message "point=%S char=%c inc=%S" (point) char inc)
         (cond
          ((eq char ?\()
           (setq inc (1+ inc)))
          ((eq char ?\))
           (cond
            ((and (not (eobp))
-                (eq (char-after) ?\))
-                (< inc 2))
+                 (< inc 2))
             (forward-char)
+            (setq inc (1- inc))
             (setq found t)
             )
            ((> inc 0)
@@ -4314,8 +4326,11 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
             )
           )
          ) ;cond
+        ;;(message "inc=%S found=%S" inc found)
         ) ;while
-    ) ; when
+      ) ; when
+    ;;(message "point=%S inc=%S" (point) inc)
+    (when found (backward-char))
   ))
 
 (defun web-mode-velocity-skip (pos)
@@ -4923,7 +4938,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
     ))
 
 (defun web-mode-block-controls-get (pos)
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (let ((controls nil))
      (cond
        ((null (get-text-property pos 'block-side))
@@ -5460,7 +5475,8 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
         ;;(message "%S: %S (%S %S)" (point) (match-string-no-properties 0) reg-beg reg-end)
 
         (setq flags 0
-              tname (downcase (match-string-no-properties 1))
+              tnameraw (match-string-no-properties 1)
+              tname (downcase tnameraw)
               char (aref tname 0)
               tbeg (match-beginning 0)
               tend nil
@@ -5489,9 +5505,13 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 
           ((not (member char '(?\! ?\?)))
            (cond
-             ((string-match-p "-" tname)
+             ((or (string-match-p "-" tname)
+                  (let ((case-fold-search nil))
+                    (string-match-p "^/?[[:upper:]][[:lower:]]" tnameraw)))
               (setq flags (logior flags 2)))
-             ((string-match-p ":" tname)
+             ;;((string-match-p ":" tname)
+             ;; (setq flags (logior flags 32)))
+             ((string-match-p "[._:]" tname)
               (setq flags (logior flags 32)))
              )
            (cond
@@ -5652,6 +5672,17 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 ;; (6)value-uq (7)value-sq (8)value-dq (9)value-bq : jsx attr={}
 ;; (10)value-block
 
+(defun web-mode--indentless-attribute-p (attr)
+  "Return t if ATTR is in `web-mode-indentless-attributes'.
+  Handles wildcards where '*' matches any suffix."
+  (let ((found nil))
+    (dolist (pattern web-mode-indentless-attributes found)
+      (if (string-suffix-p "*" pattern)
+          (when (string-prefix-p (substring pattern 0 -1) attr)
+            (setq found t))
+        (when (string= pattern attr)
+          (setq found t))))))
+
 (defun web-mode-attr-skip (limit)
 
   (let ((tag-flags 0) (attr-flags 0) (continue t) (attrs 0) (brace-depth 0)
@@ -5743,7 +5774,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
                name-end (1- pos))
          (setq state 4)
          (setq attr (buffer-substring-no-properties name-beg (1+ name-end)))
-         (when (and web-mode-indentless-attributes (member (downcase attr) web-mode-indentless-attributes))
+         (when (and web-mode-indentless-attributes (web-mode--indentless-attribute-p (downcase attr)))
            (setq attr-flags (logior attr-flags 8)))
          )
 
@@ -6062,8 +6093,8 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
            )
 
           ((and (eq ?\< ch-at)
-                (not (or (and (>= ch-before 97) (<= ch-before 122))
-                         (and (>= ch-before 65) (<= ch-before 90)))))
+                (not (or (and (>= ch-before 97) (<= ch-before 122)) ;; a-z
+                         (and (>= ch-before 65) (<= ch-before 90))))) ;; A-Z
            ;;(message "before [%S>%S|%S] pt=%S" reg-beg reg-end depth (point))
            (search-backward "<")
            (if (web-mode-jsx-skip reg-end)
@@ -6168,7 +6199,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
       )))
 
 (defun web-mode-string-continue-p (reg-beg)
-  "Is `point' preceeded by an odd number of backslashes?"
+  "Is `point' preceded by an odd number of backslashes?"
   (let ((p (1- (point))))
     (while (and (< reg-beg p) (eq ?\\ (char-before p)))
       (setq p (1- p)))
@@ -6276,7 +6307,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
       (cons beg end)
       )))
 
-(defun web-mode-jsx-skip (reg-end)
+(defun web-mode-jsx-skip2 (reg-end)
   (let ((continue t) (pos nil) (i 0))
     (looking-at "<\\([[:alpha:]][[:alnum:]:-]*\\)")
     ;; (let ((tag (match-string-no-properties 1)))
@@ -6310,50 +6341,117 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
     ;;(message "jsx-skip: %S" pos)
     pos))
 
-;; (defun web-mode-jsx-skip2 (reg-end)
-;;   (let ((continue t) (pos nil) (i 0) (tag nil) (regexp nil) (counter 1))
-;;     (looking-at "<\\([[:alpha:]][[:alnum:]:-]*\\)")
-;;     (setq tag (match-string-no-properties 1))
-;;     (setq regexp (concat "</?" tag))
-;;     ;;(message "point=%S tag=%S" (point) tag)
-;;     (save-excursion
-;;       (while continue
-;;         (cond
-;;          ((> (setq i (1+ i)) 100)
-;;           (message "jsx-skip ** warning **")
-;;           (setq continue nil))
-;;          ((looking-at "<[[:alpha:]][[:alnum:]:-]*[ ]*/>")
-;;           (goto-char (match-end 0))
-;;           (setq pos (point))
-;;           (setq continue nil))
-;;          ((not (web-mode-dom-rsf ">\\([ \t\n]*[\];,)':}]\\)\\|{" reg-end))
-;;           (setq continue nil)
-;;           )
-;;          ((eq (char-before) ?\{)
-;;           (backward-char)
-;;           (web-mode-closing-paren reg-end)
-;;           (forward-char)
-;;           )
-;;          (t
-;;           (setq continue nil)
-;;           (setq pos (match-beginning 1))
-;;           ) ;t
-;;          ) ;cond
-;;         ) ;while
-;;       ) ;save-excursion
-;;     (when pos (goto-char pos))
-;;     ;;(message "jsx-skip: %S" pos)
-;;     pos))
+ (defun web-mode-jsx-skip (reg-end) ;; #1299
+   (let ((continue t) (pos nil) (i 0) (tag nil) (regexp nil) (regexp0 nil)
+         (regexp1 nil) (counter 0) (ret nil) (match nil) (inside t))
+     (looking-at "<\\([[:alpha:]][[:alnum:].:-]*\\)") ;; #1327
+     (setq tag (match-string-no-properties 1))
+     (if (null tag)
+         (progn
+           (setq regexp "<>")
+           (setq regexp0 "</>")
+           (setq regexp1 "</?>")
+           )
+         (setq regexp (concat "<" tag "[[:space:]/>]"))
+         (setq regexp0 (concat "<" tag "[[:space:]/>]"))
+         (setq regexp1 (concat "</?" tag "[[:space:]/>]"))
+         )
+     ;;(message "-----\npoint=%S tag=%S regexp=%S reg-end=%S" (point) tag regexp reg-end)
+     (save-excursion
+       (while continue
+         (setq ret (web-mode-dom-rsf regexp reg-end))
+         (if ret
+             (progn
+               (setq match (match-string-no-properties 0))
+               ;;(message "ret=%S match=%S" ret match)
+               (when (and tag
+                          (eq (aref match 0) ?\<)
+                          (eq (char-before) ?\>))
+                 (backward-char)
+                 (when (eq (char-before) ?\/) (backward-char)))
+               )
+             (setq match nil)
+             ) ;if
+         ;;(message "point=%S regexp=%S match=%S" (point) regexp match)
+         (cond
+          ((> (setq i (1+ i)) 100)
+           (message "jsx-skip ** warning **")
+           (setq continue nil))
+          ((not ret)
+           (setq continue nil)
+           )
+          ((eq (aref match 0) ?\{)
+           (backward-char)
+           (web-mode-closing-paren reg-end)
+           (forward-char)
+           (if inside
+               (setq regexp (concat "[{]\\|/?>"))
+             (setq regexp (concat "[{]\\|" regexp1))
+             )
+           )
+          ((and (null tag) match (string= match "</>")) ;; </>
+           (setq inside nil)
+           (if (eq counter 1)
+               (progn
+                 (setq counter 0)
+                 (setq continue nil)
+                 (setq pos (point)))
+               (setq regexp (concat "[{]\\|<>"))
+               )
+           )
+          ((and (null tag) match (string= match "<>")) ;; <>
+           (setq inside nil)
+           (setq counter (1+ counter))
+           (setq regexp (concat "[{]\\|</>"))
+           ) ;t
+          ((and (eq (char-before) ?\>) (eq (char-before (1- (point))) ?\/)) ;; />
+           (setq inside nil)
+           (if (eq counter 1)
+               (progn
+                 (setq counter 0)
+                 (setq continue nil)
+                 (setq pos (point)))
+             (setq regexp (concat "[{]\\|" regexp0))
+             )
+           )
+          ((eq (char-before) ?\>) ;; >
+           (setq inside nil)
+           (if (= counter 0)
+               (progn
+                 (setq continue nil)
+                 (setq pos (point)))
+             (setq regexp (concat "[{]\\|" regexp1))
+             )
+           )
+          ((and (> (length match) 1) (string= (substring match 0 2) "</"))
+           (setq inside t)
+           (setq counter (1- counter))
+           (setq regexp (concat "[{]\\|>"))
+           )
+          (t ;; <tag
+           (setq inside t)
+           (setq counter (1+ counter))
+           (setq regexp (concat "[{]\\|>"))
+           ) ;t
+          ) ;cond
+         ;;(message "point=%S counter=%S inside=%S" (point) counter inside)
+         ) ;while
+       ) ;save-excursion
+     (when pos (goto-char pos))
+     ;;(message "jsx-skip: %S" pos)
+     pos))
 
 ;; http://facebook.github.io/jsx/
 ;; https://github.com/facebook/jsx/blob/master/AST.md
 (defun web-mode-jsx-scan-element (reg-beg reg-end depth)
   (unless depth (setq depth 1))
+  ;;(message "%S %S | %S" reg-beg reg-end depth)
   (save-excursion
     (goto-char reg-beg)
     (put-text-property reg-beg (1+ reg-beg) 'jsx-beg depth)
     (put-text-property (1- reg-end) reg-end 'jsx-end depth)
     (put-text-property reg-beg reg-end 'jsx-depth depth)
+    (remove-list-of-text-properties reg-beg reg-end '(tag-beg tag-end tag-name tag-type tag-attr tag-attr-beg tag-attr-end))
     (goto-char reg-beg)
     (web-mode-scan-elements reg-beg reg-end)
     (web-mode-jsx-scan-expression reg-beg reg-end (1+ depth))
@@ -6628,7 +6726,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
     ;;(web-mode-skip-fontification
     ;; nil)
     (t
-     (web-mode-with-silent-modifications
+     (with-silent-modifications
       (save-excursion
         (save-restriction
           (save-match-data
@@ -6696,6 +6794,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 
 (defun web-mode-fontify-tags (reg-beg reg-end &optional depth)
   (let ((continue t))
+    ;;(message "%S %S %S" reg-beg reg-end depth)
     (goto-char reg-beg)
     (when (and (not (get-text-property (point) 'tag-beg))
                (not (web-mode-tag-next)))
@@ -6714,7 +6813,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
       (when (or (not (web-mode-tag-next))
                 (>= (point) reg-end))
         (setq continue nil))
-      ) ;while
+      ) ;while continue
     (when web-mode-enable-inlays
       (when (null web-mode-inlay-regexp)
         (setq web-mode-inlay-regexp (regexp-opt '("\\[" "\\(" "\\begin{align}"))))
@@ -6783,10 +6882,13 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
                     (t                       'web-mode-html-tag-face)))
        (put-text-property beg (+ beg (if slash-beg 2 1))
                           'font-lock-face 'web-mode-html-tag-bracket-face)
-       (unless (string= name "_fragment_")
-         (put-text-property (+ beg (if slash-beg 2 1))
-                            (+ beg (if slash-beg 2 1) (length name))
-                            'font-lock-face face))
+       (if (string= name "_fragment_")
+           (progn
+             ;;(message "beg=%S" beg)
+             )
+           (put-text-property (+ beg (if slash-beg 2 1))
+                              (+ beg (if slash-beg 2 1) (length name))
+                              'font-lock-face face))
        (when (or slash-end bracket-end)
          (put-text-property (- end (if slash-end 2 1)) end 'font-lock-face 'web-mode-html-tag-bracket-face)
          ) ;when
@@ -7958,8 +8060,24 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
                    'font-lock-face
                    'web-mode-current-column-highlight-face))
 
+(defun web-mode-count-invisible-character-ranges (min max)
+  (interactive "r")
+  (let ((count 0) (current-pos min))
+    (save-excursion
+      (while (<= current-pos max)
+        (goto-char current-pos)
+        (if (get-text-property current-pos 'invisible)
+            (progn
+              (setq count (1+ count))
+              (setq current-pos (1+ current-pos))
+              (while (and (<= current-pos max)
+                          (get-text-property current-pos 'invisible))
+                (setq current-pos (1+ current-pos))))
+          (setq current-pos (1+ current-pos)))))
+    count))
+
 (defun web-mode-column-show ()
-  (let ((index 0) overlay diff column line-to line-from line-delta regions (overlay-skip nil) last-line-no)
+  (let ((index 0) overlay diff column line-to line-from line-delta last-line-no)
     (web-mode-column-hide)
     (setq web-mode-enable-current-column-highlight t)
     (save-mark-and-excursion
@@ -7991,7 +8109,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
             (move-to-column column)
             (setq end-point (point))
             (setq line-delta (count-lines start-point end-point t))
-            (setq line-delta (+ line-delta (count-invisible-character-ranges start-point end-point))))
+            (setq line-delta (+ line-delta (web-mode-count-invisible-character-ranges start-point end-point))))
           (setq line-to (+ line-from (1- line-delta))))
         ;(message (format "Currently at line: %d" (line-number-at-pos)))
         (setq last-line-no (line-number-at-pos))
@@ -8031,13 +8149,12 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
           (setq index (1+ index))
           ) ;while
         ) ;when
-      ) ;save-mark-and-excursion
+      ) ;save-excursion
     ) ;let
   )
 
 (defun web-mode-column-show2 ()
-  (let ((index 0) overlay diff column line-to line-from
-        line-delta regions (overlay-skip nil) last-line-no)
+  (let ((index 0) overlay diff column line-to line-from)
     (web-mode-column-hide)
     (setq web-mode-enable-current-column-highlight t)
     (save-excursion
@@ -8176,7 +8293,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
   "Toggle folding on an html element or a control block."
   (interactive)
   (web-mode-scan)
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (save-excursion
      (if pos (goto-char pos))
      (let (beg-inside beg-outside end-inside end-outside overlay overlays)
@@ -8461,7 +8578,8 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
             language ""
             prev-line ""
             prev-char 0
-            prev-pos nil)
+            prev-pos nil
+            prev-line-end nil)
 
       (when (get-text-property pos 'part-side)
         (setq part-language (symbol-name (get-text-property pos 'part-side))))
@@ -8575,7 +8693,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
          (cond
            ((string= web-mode-engine "blade")
             (save-excursion
-              (when (web-mode-rsf "{[{!]+[ ]*")
+              (when (web-mode-rsf "{[{!]+[ ]*\\|@props[ ]*[(]") ;; #1318
                 (setq reg-col (current-column))))
             (setq reg-beg (+ reg-beg 2))
             )
@@ -8712,12 +8830,15 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
              (when (setq prev (web-mode-part-previous-live-line reg-beg))
                (setq prev-line (nth 0 prev)
                      prev-indentation (nth 1 prev)
-                     prev-pos (nth 2 prev))
+                     prev-pos (nth 2 prev)
+                     prev-line-end (nth 3 prev))
                )
              )
             ((setq prev (web-mode-block-previous-live-line))
-             (setq prev-line (car prev)
-                   prev-indentation (cdr prev))
+             (setq prev-line (nth 0 prev)
+                   prev-indentation (nth 1 prev)
+                   prev-pos (nth 2 prev)
+                   prev-line-end (nth 3 prev))
              (setq prev-line (web-mode-clean-block-line prev-line)))
             ) ;cond
           ) ;let
@@ -8753,6 +8874,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
             :prev-char prev-char
             :prev-indentation prev-indentation
             :prev-line prev-line
+            :prev-line-end prev-line-end
             :prev-pos prev-pos
             :reg-beg reg-beg
             :reg-col reg-col
@@ -8781,6 +8903,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
              (prev-char (plist-get ctx :prev-char))
              (prev-indentation (plist-get ctx :prev-indentation))
              (prev-line (plist-get ctx :prev-line))
+             (prev-line-end (plist-get ctx :prev-line-end))
              (prev-pos (plist-get ctx :prev-pos))
              (reg-beg (plist-get ctx :reg-beg))
              (reg-col (plist-get ctx :reg-col))
@@ -9355,7 +9478,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
           ((and is-js
                 (or (member ?\, chars)
                     (member prev-char '(?\( ?\[))))
-           (when debug (message "I360(%S) javascript-args" pos))
+           (when debug (message "I360(%S) javascript-args(%S)" pos (web-mode-jsx-is-html prev-line-end)))
            (cond
              ((not (web-mode-javascript-args-beginning pos reg-beg))
               (message "no js args beg")
@@ -9464,7 +9587,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
           ((and is-js (member ?\, chars))
            (when debug (message "I400(%S) part-args" pos))
            (cond
-             ((not (web-mode-part-args-beginning pos reg-beg))
+             ((not (web-mode-javascript-args-beginning pos reg-beg)) ;; #1337
               ;;(message "ici")
               )
              ((cdr (assoc "lineup-args" web-mode-indentation-params))
@@ -9534,8 +9657,16 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
                                                               language
                                                               reg-beg))))
 
+          ((member language '("django"))
+           (when debug (message "I430(%S) django-indentation" pos))
+           (setq offset nil)
+           )
+
           (t
-           (when debug (message "I430(%S) bracket-indentation" pos))
+           (when debug
+             (message "I440(%S) generic bracket-indentation" pos)
+             ;;(message "reg-col=%S curr-ind=%S lang=%S reg-beg=%S" reg-col curr-indentation language reg-beg)
+             )
            (setq offset (car (web-mode-bracket-indentation pos
                                                            reg-col
                                                            curr-indentation
@@ -9900,7 +10031,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
             ((string-match-p ",$" prev-line)
              (save-excursion
                (goto-char limit)
-               (looking-at "<%=? [a-z]+ ")
+               (looking-at "<%=? [a-z_]+ ")
                (setq offset (+ initial-column (length (match-string-no-properties 0))))
                ) ;save-excursion
              )
@@ -10033,7 +10164,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
         ) ;while
       (if (string= line "")
           (progn (goto-char pos) nil)
-          (cons line (current-indentation)))
+          (list line (current-indentation) pos (line-end-position)))
       )))
 
 (defun web-mode-part-is-opener (pos reg-beg)
@@ -10085,7 +10216,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
            ) ;while
          ;;(message "%S %S : %S" bol-pos eol-pos pos)
          (setq line (web-mode-clean-part-line line))
-         (list line (current-indentation) pos))
+         (list line (current-indentation) pos (line-end-position)))
         ) ;cond
       )))
 
@@ -11280,9 +11411,9 @@ Prompt user if TAG-NAME isn't provided."
 ;;---- COMMENT ------------------------------------------------------------------
 
 (defun web-mode-toggle-comments ()
-  "Toggle comments visbility."
+  "Toggle comments visibility."
   (interactive)
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (save-excursion
      (if web-mode-comments-invisible
          (remove-overlays))
@@ -11577,21 +11708,18 @@ Prompt user if TAG-NAME isn't provided."
     ))
 
 (defun web-mode-comment-ejs-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-insert-text-at-pos "//" (+ beg 2))))
 
 (defun web-mode-comment-erb-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-insert-text-at-pos "#" (+ beg 2))))
 
 (defun web-mode-comment-artanis-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-insert-text-at-pos ";" (+ beg 2))))
 
 (defun web-mode-comment-django-block (pos)
@@ -11616,9 +11744,8 @@ Prompt user if TAG-NAME isn't provided."
     (web-mode-insert-text-at-pos "#" (1+ beg))))
 
 (defun web-mode-comment-jsp-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-insert-text-at-pos "--" (+ beg 2))))
 
 (defun web-mode-comment-go-block (pos)
@@ -11761,9 +11888,8 @@ Prompt user if TAG-NAME isn't provided."
   )
 
 (defun web-mode-uncomment-ejs-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-remove-text-at-pos 1 (+ beg 2))))
 
 (defun web-mode-uncomment-django-block (pos)
@@ -11810,9 +11936,8 @@ Prompt user if TAG-NAME isn't provided."
     (web-mode-remove-text-at-pos 1 (1+ beg))))
 
 (defun web-mode-uncomment-jsp-block (pos)
-  (let (beg end)
-    (setq beg (web-mode-block-beginning-position pos)
-          end (web-mode-block-end-position pos))
+  (let (beg)
+    (setq beg (web-mode-block-beginning-position pos))
     (web-mode-remove-text-at-pos 2 (+ beg 2))))
 
 (defun web-mode-uncomment-go-block (pos)
@@ -12841,6 +12966,7 @@ Prompt user if TAG-NAME isn't provided."
     (t
      (when (get-text-property pos 'tag-beg) (setq pos (1+ pos)))
      (setq pos (next-single-property-change pos 'tag-beg))
+     ;;(message "%S | %S" pos limit)
      (if (and pos (<= pos limit)) pos nil))
     ))
 
@@ -14885,7 +15011,7 @@ Prompt user if TAG-NAME isn't provided."
   nil)
 
 (defun web-mode-on-exit ()
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (put-text-property (point-min) (point-max) 'invisible nil)
    (remove-overlays)
    (remove-hook 'change-major-mode-hook 'web-mode-on-exit t)
@@ -14926,7 +15052,7 @@ extended to support more filetypes by customizing
 (defun web-mode-reload ()
   "Reload web-mode."
   (interactive)
-  (web-mode-with-silent-modifications
+  (with-silent-modifications
    (put-text-property (point-min) (point-max) 'invisible nil)
    (remove-overlays)
    (setq font-lock-unfontify-region-function 'font-lock-default-unfontify-region)
@@ -14982,7 +15108,7 @@ extended to support more filetypes by customizing
       (setq web-mode-trace t)))
 
 (defun web-mode-debug ()
-  "Display informations useful for debugging."
+  "Display information useful for debugging."
   (interactive)
   (let ((modes nil)
         (customs '(web-mode-enable-current-column-highlight web-mode-enable-current-element-highlight indent-tabs-mode))
