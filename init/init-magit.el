@@ -199,7 +199,19 @@ with a Git revert subject."
 ;; a submodule pointer that moved, still show.
 (with-eval-after-load 'magit-status
   (put 'magit-status-mode 'magit-diff-default-arguments
-       '("--no-ext-diff" "--ignore-submodules=untracked")))
+       '("--no-ext-diff" "--ignore-submodules=untracked"))
+  ;; The "Filter!" header warns that a diff filter hides changes.  The filter
+  ;; above is deliberate, so move the reminder out of the headers and down to
+  ;; the end of the status buffer.
+  (remove-hook 'magit-status-headers-hook #'magit-insert-diff-filter-header)
+  (add-hook 'magit-status-sections-hook #'magit-insert-diff-filter-header 90))
+
+;; `magit-commit' passes --verbose by default, which appends the cut line and
+;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
+;; shows that diff in its own window.  The prefix's `:value' initarg fills the
+;; `default-value' slot, and --verbose is the only argument it holds.
+(with-eval-after-load 'magit-commit
+  (oset (get 'magit-commit 'transient--prefix) default-value nil))
 
 ;; https://www.reddit.com/r/emacs/comments/bdsfb7/comment/el0lowt/?utm_source=share&utm_medium=web2x&context=3
 ;; https://emacs.stackexchange.com/a/52040
