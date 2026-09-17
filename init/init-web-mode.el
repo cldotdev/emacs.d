@@ -1,5 +1,8 @@
 ;;; -*- lexical-binding: t; -*-
 (require 'web-mode)
+;; `flycheck-define-checker' below is a macro, so flycheck has to be
+;; loaded when this file is byte-compiled, not just when `init.el' runs.
+(require 'flycheck)
 
 (add-to-list 'auto-mode-alist '("\\.phtml\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.tpl\\.php\\'" . web-mode))
