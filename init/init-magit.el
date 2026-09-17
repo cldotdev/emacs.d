@@ -75,7 +75,8 @@ symlink location."
 
 (defun my/git-commit-fill-paragraph (&optional justify)
   "Fill paragraph in git commit buffer with proper list item handling.
-Treats list items like markdown-mode: first line and indented continuations separately."
+Treats list items like markdown-mode: first line and indented
+continuations separately."
   (interactive)
   (save-excursion
     (let (start end)
@@ -190,7 +191,15 @@ with a Git revert subject."
 
 (add-hook 'git-commit-setup-hook #'my/git-commit-reformat-revert)
 
-(setq magit-section-visibility-indicator nil)
+(setq magit-section-visibility-indicators nil)
+
+;; magit-status.el puts "--ignore-submodules=none" in the mode's default diff
+;; arguments, which lists every vendored package holding the build output
+;; `make compile' leaves untracked.  A tracked file the package modifies, and
+;; a submodule pointer that moved, still show.
+(with-eval-after-load 'magit-status
+  (put 'magit-status-mode 'magit-diff-default-arguments
+       '("--no-ext-diff" "--ignore-submodules=untracked")))
 
 ;; https://www.reddit.com/r/emacs/comments/bdsfb7/comment/el0lowt/?utm_source=share&utm_medium=web2x&context=3
 ;; https://emacs.stackexchange.com/a/52040
@@ -212,9 +221,9 @@ with a Git revert subject."
 ;; symlinked paths.
 (defun magit-diff-visit-file--handle-no-hunk (orig-fun &rest args)
   "Advice for magit-diff-visit-file--noselect to handle files without hunks.
-This fixes the 'Wrong type argument: number-or-marker-p, nil' error when
+This fixes the \"Wrong type argument: number-or-marker-p, nil\" error when
 visiting renamed files that have no content changes, and also handles
-'Not inside Git repository' error when working with symlinked paths."
+\"Not inside Git repository\" error when working with symlinked paths."
   (let ((toplevel (magit-toplevel)))  ; Capture toplevel in correct context
     (condition-case nil
         (apply orig-fun args)
@@ -236,7 +245,7 @@ visiting renamed files that have no content changes, and also handles
   "Ensure magit-status buffer has correct default-directory.
 This fixes issues where magit-status is called from a buffer whose
 default-directory is not inside a git repository, causing subsequent
-operations like visiting files to fail with 'Not inside Git repository' error."
+operations like visiting files to fail with \"Not inside Git repository\" error."
   (when-let* ((toplevel (magit-toplevel)))
     (setq-local default-directory toplevel)))
 
