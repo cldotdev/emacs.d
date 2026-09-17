@@ -27,7 +27,7 @@
 - undo-tree, multiple-cursors, imenu-list, indent-bars, highlight-symbol, highlight-numbers, visible-mark, window-numbering
 - Helm, loaded for its own `helm-` commands; nothing is rebound to it
 - dumb-jump for jumping to a definition without a language server
-- VLF for files too large to visit whole
+- VLF for files too large to visit whole. A file past `large-file-warning-threshold` offers to open in batches instead of the plain confirmation prompt; `M-x vlf` visits one on demand
 - Nord theme
 - Terminal clipboard integration: OSC 52 through clipetty on GNU/Linux, pbcopy and pbpaste on macOS
 - mise supplies PATH and the rest of the environment at startup

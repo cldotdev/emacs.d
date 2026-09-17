@@ -163,3 +163,9 @@
 [submodule "package/corfu-terminal"]
 	path = package/corfu-terminal
 	url = https://codeberg.org/akib/emacs-corfu-terminal.git
+[submodule "package/vlf"]
+	path = package/vlf
+	url = https://github.com/m00natic/vlfi.git
+[submodule "package/lacarte"]
+	path = package/lacarte
+	url = https://github.com/emacsmirror/lacarte.git
