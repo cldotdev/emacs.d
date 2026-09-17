@@ -225,10 +225,10 @@ the last defined face will be reused."
 (defun visible-mark-mode-maybe ()
   (when (cond
          ((minibufferp (current-buffer)) nil)
-         ((cl-flet ((fun (arg)
-                         (if (null arg) nil
-                           (or (string-match (car arg) (buffer-name))
-                               (fun (cdr arg))))))
+         ((cl-labels ((fun (arg)
+                           (if (null arg) nil
+                             (or (string-match (car arg) (buffer-name))
+                                 (fun (cdr arg))))))
             (fun global-visible-mark-mode-exclude-alist)) nil)
          (t t))
     (visible-mark-mode t)))
