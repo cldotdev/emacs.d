@@ -213,6 +213,19 @@ with a Git revert subject."
 (with-eval-after-load 'magit-commit
   (oset (get 'magit-commit 'transient--prefix) default-value nil))
 
+;; Verify GPG signatures by default: the log colors each hash by signature
+;; status, and the revision buffer prints the gpg verdict above the diff.  The
+;; upstream log default -n256 must stay within `magit-log-show-signatures-limit',
+;; since the log drops --show-signature when -n is unset or exceeds it.
+(with-eval-after-load 'magit-log
+  (put 'magit-log-mode 'magit-log-default-arguments
+       (append (get 'magit-log-mode 'magit-log-default-arguments)
+               '("--show-signature"))))
+(with-eval-after-load 'magit-diff
+  (put 'magit-revision-mode 'magit-diff-default-arguments
+       (append (get 'magit-revision-mode 'magit-diff-default-arguments)
+               '("--show-signature"))))
+
 ;; https://www.reddit.com/r/emacs/comments/bdsfb7/comment/el0lowt/?utm_source=share&utm_medium=web2x&context=3
 ;; https://emacs.stackexchange.com/a/52040
 ;; https://irreal.org/blog/?p=8877
