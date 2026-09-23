@@ -96,11 +96,12 @@ Otherwise copy the region as usual."
 (defvar my-max-backup-file-size 204800
   "Maximum file size (in bytes) to backup. Files larger than this will not be backed up. Default is 200KB.")
 
-;; Create backup directory if it doesn't exist
+;; Keep the backup directory owner-only.  Backups copy their source
+;; file's mode, so only the directory's mode keeps other users out.  Set
+;; it on every startup to also tighten a directory that already exists.
 (let ((backup-dir (expand-file-name my-backup-directory)))
-  (unless (file-directory-p backup-dir)
-    (make-directory backup-dir t)
-    (set-file-modes backup-dir #o700)))
+  (make-directory backup-dir t)
+  (set-file-modes backup-dir #o700))
 
 ;; Sensitive file patterns to exclude from backup
 (defvar my-sensitive-file-patterns
