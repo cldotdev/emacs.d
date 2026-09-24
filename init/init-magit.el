@@ -201,10 +201,9 @@ with a Git revert subject."
   (put 'magit-status-mode 'magit-diff-default-arguments
        '("--no-ext-diff" "--ignore-submodules=untracked"))
   ;; The "Filter!" header warns that a diff filter hides changes.  The filter
-  ;; above is deliberate, so move the reminder out of the headers and down to
-  ;; the end of the status buffer.
-  (remove-hook 'magit-status-headers-hook #'magit-insert-diff-filter-header)
-  (add-hook 'magit-status-sections-hook #'magit-insert-diff-filter-header 90))
+  ;; above is deliberate, so drop the reminder, which also hides it for a
+  ;; file filter set with D.
+  (remove-hook 'magit-status-headers-hook #'magit-insert-diff-filter-header))
 
 ;; `magit-commit' passes --verbose by default, which appends the cut line and
 ;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
