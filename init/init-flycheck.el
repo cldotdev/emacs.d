@@ -123,4 +123,23 @@ Result is cached per project for the rest of the Emacs session."
 ;; resolve relative paths in source commands at static analysis time
 (setq flycheck-shellcheck-excluded-warnings '("SC1091"))
 
+;; --stdin-filename lets rumdl resolve the project config and
+;; per-file overrides for the buffer's real path.
+(flycheck-define-checker markdown-rumdl
+  "Markdown linter using rumdl.
+
+See URL `https://github.com/rvben/rumdl'."
+  :command ("rumdl" "check" "--stdin" "--quiet"
+            "--stdin-filename" (eval (or buffer-file-name "stdin.md")))
+  :standard-input t
+  :error-patterns
+  ((warning line-start (one-or-more (not (any ":"))) ":" line ":" column ": "
+            "[" (id (one-or-more alnum)) "] "
+            ;; A trailing [*] marks an issue `rumdl fmt' can fix; keep
+            ;; it out of the message.
+            (message (minimal-match (one-or-more not-newline)))
+            (optional " [*]") line-end))
+  :modes (markdown-mode gfm-mode))
+(add-to-list 'flycheck-checkers 'markdown-rumdl)
+
 (provide 'init-flycheck)

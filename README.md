@@ -14,7 +14,7 @@
 - C: `c-mode`
 - SQL: `sql-mode`, formatted by sql-formatter
 - Shell: `sh-mode`, checked by ShellCheck
-- Markdown: `markdown-mode` and `gfm-mode`, with the list and table behaviour below
+- Markdown: `markdown-mode` and `gfm-mode`, checked by rumdl, with the list and table behaviour below
 - Web templates: `web-mode` and `cheetah-mode`
 - Data and configuration: YAML, JSON, TOML, Dockerfile, CSV, nginx, HCL
 
@@ -53,6 +53,7 @@ Each of the following is needed only by the feature named beside it, and everyth
 - pyright-langserver, ruff: Python
 - mise: the startup environment, and the RuboCop wrapper that runs `mise x -- bundle exec rubocop`
 - shellcheck: shell linting
+- rumdl: Markdown linting
 - golint: `M-x golint`
 - sql-formatter: `C-c C-f` in `sql-mode`
 - opencc, with its data under `/usr/local/share/opencc/`: chinese-conv. The path is hardcoded in `init/init-chinese-conv.el`
