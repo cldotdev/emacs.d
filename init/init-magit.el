@@ -220,15 +220,13 @@ with a Git revert subject."
        (append (get 'magit-revision-mode 'magit-diff-default-arguments)
                '("--show-signature"))))
 
-;; `magit-section-mode' turns on `truncate-lines'.  Wrap long lines in the
-;; buffers that show diffs instead: the status buffer's staged and unstaged
-;; hunks, and the diff buffers.  `magit-diff-mode-hook' also runs in the modes
-;; derived from `magit-diff-mode', such as the revision and stash buffers.
+;; `magit-section-mode' turns on `truncate-lines'.  Wrap long lines in diff
+;; buffers instead; the hook also runs in the modes derived from
+;; `magit-diff-mode', such as the revision and stash buffers.
 (defun my/magit-wrap-lines ()
   "Wrap long lines instead of truncating them."
   (setq truncate-lines nil))
 
-(add-hook 'magit-status-mode-hook #'my/magit-wrap-lines)
 (add-hook 'magit-diff-mode-hook #'my/magit-wrap-lines)
 
 ;; https://www.reddit.com/r/emacs/comments/bdsfb7/comment/el0lowt/?utm_source=share&utm_medium=web2x&context=3
