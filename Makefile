@@ -50,6 +50,12 @@ update:
 
 compile:
 	mkdir -p erc/log
+	@# Some packages do not ignore the build output this target leaves in
+	@# them, and the superproject's .gitignore does not reach into a
+	@# submodule.  This replaces ~/.config/git/ignore in each submodule
+	@# rather than adding to it.
+	git submodule foreach --quiet --recursive \
+		'git config core.excludesFile ${CURDIR}/submodule.gitignore'
 	cd ${magit_dir} && \
 		echo "LOAD_PATH = -L ${magit_dir}/lisp \
 		-L ${dash_dir} \

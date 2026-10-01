@@ -1,0 +1,4 @@
+# Build output `make compile' leaves in vendored packages whose own
+# .gitignore does not cover it.
+*.elc
+*.eln
