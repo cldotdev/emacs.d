@@ -193,18 +193,6 @@ with a Git revert subject."
 
 (setq magit-section-visibility-indicators nil)
 
-;; magit-status.el puts "--ignore-submodules=none" in the mode's default diff
-;; arguments, which lists every vendored package holding the build output
-;; `make compile' leaves untracked.  A tracked file the package modifies, and
-;; a submodule pointer that moved, still show.
-(with-eval-after-load 'magit-status
-  (put 'magit-status-mode 'magit-diff-default-arguments
-       '("--no-ext-diff" "--ignore-submodules=untracked"))
-  ;; The "Filter!" header warns that a diff filter hides changes.  The filter
-  ;; above is deliberate, so drop the reminder, which also hides it for a
-  ;; file filter set with D.
-  (remove-hook 'magit-status-headers-hook #'magit-insert-diff-filter-header))
-
 ;; `magit-commit' passes --verbose by default, which appends the cut line and
 ;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
 ;; shows that diff in its own window.  The prefix's `:value' initarg fills the
