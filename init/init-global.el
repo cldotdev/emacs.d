@@ -56,9 +56,6 @@ Otherwise copy the region as usual."
 ;; Buffer to show after starting Emacs.
 ;; (setq initial-buffer-choice "~")
 
-;; Cursor, please do not blink
-(blink-cursor-mode nil)
-
 ;; Show column number in mode line
 (setq column-number-mode t)
 
@@ -244,16 +241,14 @@ the latest existing backup.  Skip empty or oversized files."
 ;; (global-set-key (kbd "RET") 'indent-new-line)
 
 ;; Display line number
-(when (version<= "26.0.50" emacs-version)
-  (global-display-line-numbers-mode))
+(global-display-line-numbers-mode)
 
 ;; Word wrap
 (setq-default truncate-lines t)
 (global-set-key (kbd "C-c t") 'toggle-truncate-lines)
 
 ;; Enabling font lock
-(if (fboundp 'global-font-lock-mode)
-    (global-font-lock-mode 1))
+(global-font-lock-mode 1)
 
 ;; Visual line mode
 (setq-default visual-line-mode t)
@@ -392,12 +387,11 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
 (global-set-key (kbd "C-c ]") #'xref-go-forward)
 
 ;; GUI settings
-(if (fboundp 'menu-bar-mode)
-        (menu-bar-mode -1))
-(if (fboundp 'tool-bar-mode)
-         (tool-bar-mode -1))
-(if (fboundp 'blink-cursor-mode)
-    (blink-cursor-mode 0))
+(menu-bar-mode -1)
+;; A build without X has no tool bar.
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(blink-cursor-mode 0)
 
 ;; Launch emacsclient maximized from the commandline
 ;; 1. $ emacsclient -nc -F "((fullscreen . maximized))"
@@ -410,9 +404,6 @@ INFO is (SYNTAX PAIR UNCONDITIONAL STRING-OR-COMMENT-START)."
                                  (dired-directory dired-directory "%b"))))
 
 (desktop-save-mode 1)
-
-;; Disable the menu bar
-(menu-bar-mode -1)
 
 ;; Customize the wrap and truncation markers.
 ;; `standard-display-table' is nil until something populates it, so
