@@ -145,12 +145,6 @@
 [submodule "package/cape"]
 	path = package/cape
 	url = https://github.com/minad/cape.git
-[submodule "package/popon"]
-	path = package/popon
-	url = https://codeberg.org/akib/emacs-popon.git
-[submodule "package/corfu-terminal"]
-	path = package/corfu-terminal
-	url = https://codeberg.org/akib/emacs-corfu-terminal.git
 [submodule "package/vlf"]
 	path = package/vlf
 	url = https://github.com/m00natic/vlfi.git

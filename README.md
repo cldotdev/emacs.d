@@ -21,7 +21,7 @@
 ### Editing
 
 - Minibuffer completion with Vertico and Orderless, including directory navigation, a grid layout for files, and per-category layouts
-- In-buffer completion with Corfu and Cape. Emacs 31 draws the popup on a terminal itself; earlier versions fall back to popon through corfu-terminal, which avoids the line-number and wide-CJK display artifacts
+- In-buffer completion with Corfu and Cape, whose popup Emacs 31 draws on a terminal itself
 - On-the-fly syntax checks with Flycheck
 - Git with Magit and Forge
 - undo-tree, multiple-cursors, imenu-list, indent-bars, highlight-symbol, highlight-numbers, visible-mark, window-numbering

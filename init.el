@@ -46,9 +46,7 @@
 (require 'init-visual-fill-column)
 
 ;; corfu
-;; Compact inline completion popup.  Terminal Emacs before 31 renders
-;; it with popon to avoid the line-number / wide-CJK display artifacts
-;; caused by company-pseudo-tooltip's overlay-based popup.
+;; Compact inline completion popup.
 ;; https://github.com/minad/corfu
 (require 'init-corfu)
 

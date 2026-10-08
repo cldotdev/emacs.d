@@ -1,20 +1,11 @@
 ;;; init-corfu.el --- Corfu completion configuration -*- lexical-binding: t -*-
 
-;;; Commentary:
-
-;; Emacs 31 draws child frames on a terminal, so Corfu draws the popup
-;; there too.  Earlier versions fall back to popon (via corfu-terminal)
-;; in a terminal, which avoids the line-number / wide-CJK display
-;; artifacts caused by company-mode's pseudo-tooltip overlay.
-
 ;;; Code:
 
 (add-to-list 'load-path "~/.emacs.d/package/compat")
 (add-to-list 'load-path "~/.emacs.d/package/corfu")
 (add-to-list 'load-path "~/.emacs.d/package/corfu/extensions")
 (add-to-list 'load-path "~/.emacs.d/package/cape")
-(add-to-list 'load-path "~/.emacs.d/package/popon")
-(add-to-list 'load-path "~/.emacs.d/package/corfu-terminal")
 
 (require 'corfu)
 (require 'corfu-auto)
@@ -23,11 +14,6 @@
 (require 'dabbrev)
 (require 'project)
 (require 'seq)
-
-(declare-function corfu-terminal-mode "corfu-terminal" (&optional arg))
-(declare-function corfu--popup-hide "corfu" ())
-(declare-function corfu--popup-support-p "corfu" ())
-(defvar corfu-terminal--last-position)
 
 (setq corfu-auto t
       corfu-auto-delay 0
@@ -121,20 +107,6 @@
     (list (current-buffer))))
 
 (setq cape-dabbrev-buffer-function #'init-corfu--dabbrev-project-buffers)
-
-(defun init-corfu--hide-terminal-popup-before-exhibit (&rest _)
-  "Hide stale corfu-terminal popup before Corfu measures point position."
-  (when (bound-and-true-p corfu-terminal-mode)
-    (setq corfu-terminal--last-position nil)
-    (corfu--popup-hide)))
-
-;; Child frames became available on terminals in Emacs 31; popon is
-;; the fallback for everything older.
-(unless (corfu--popup-support-p)
-  (require 'corfu-terminal)
-  (advice-add 'corfu--exhibit
-              :before #'init-corfu--hide-terminal-popup-before-exhibit)
-  (corfu-terminal-mode 1))
 
 ;; Disable in magit-status.
 (setq global-corfu-modes '((not magit-status-mode) t))
