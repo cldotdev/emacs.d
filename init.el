@@ -6,6 +6,11 @@
 ;; under `init/' would sit unused until the next `make compile'.
 (setq load-prefer-newer t)
 
+;; `make compile' builds every `.eln' ahead of time, so what still compiles
+;; in the background (trampolines, packages awaiting a rebuild) only logs
+;; its warnings.
+(setq native-comp-async-report-warnings-errors 'silent)
+
 ;; Added by Package.el.  This must come before configurations of
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.

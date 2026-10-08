@@ -1,4 +1,4 @@
-;;; make-compile.el --- Byte-compile the configuration  -*- lexical-binding: t -*-
+;;; make-compile.el --- Byte- and native-compile the configuration  -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
@@ -19,6 +19,16 @@
 ;;
 ;; A `.elc' that `byte-recompile-directory' has not reached yet is still what
 ;; `require' hands the compiler, so every stale or orphaned one goes first.
+;;
+;; Every `.elc' outside `make-compile-native-skip' then gets its `.eln' in
+;; `eln-cache/'.  `load' swaps a `.elc' for its `.eln' only when the `.eln'
+;; is not older than the `.elc'; otherwise it loads the `.elc' and queues a
+;; native compile in the background, which warns about every dependency it
+;; cannot see.  The
+;; makefiles for magit and helm rebuild their `.elc' without touching the
+;; `.eln', so a rebuild leaves the `.eln' older, and only the timestamps
+;; tell.  `native-compile-prune-cache' then drops the directories of every
+;; other Emacs build.
 ;;
 ;; `init.el' itself stays uncompiled.  It is a list of `require' forms, so
 ;; there is nothing to gain, and `load' reads it before the
@@ -66,16 +76,39 @@ compiles against it, and one whose `.el' upstream removed is loaded for good."
            (append args (list "--eval" (format "%S" form))))
     (princ (buffer-string))))
 
+(defconst make-compile-native-skip
+  "/\\(?:tests?\\|dev\\|features\\)/\\|-tests?\\.el\\'"
+  "Regexp for the sources the native step skips, matched relative to the root.
+They are tests, development scripts and cucumber step definitions that no
+session loads, so native-compiling them only costs build time and `eln-cache/'
+space.  `native-compile' also fails on dash's examples with
+`invalid-read-syntax' \"#<\" while loading the file it writes.")
+
+(defun make-compile-native-stale (entry)
+  "Return the sources under ENTRY whose `.eln' is missing or out of date.
+ENTRY is a directory or a single `.el'.  Only a source with a `.elc' counts,
+so files that opt out of compiling stay out."
+  (let ((elcs (cond ((file-directory-p entry)
+                     (directory-files-recursively entry "\\.elc\\'"))
+                    ((and (string-suffix-p ".el" entry)
+                          (file-exists-p (concat entry "c")))
+                     (list (concat entry "c"))))))
+    (cl-loop for elc in elcs
+             for el = (substring elc 0 -1)
+             unless (string-match-p make-compile-native-skip
+                                    (file-relative-name el make-compile-root))
+             when (file-newer-than-file-p elc (comp-el-to-eln-filename el))
+             collect el)))
+
 (let* ((args (append '("-Q" "--batch")
                      (mapcan (lambda (dir) (list "-L" dir))
                              (make-compile-load-path))))
-       (package-dir (expand-file-name "package" make-compile-root)))
-  (make-compile-prune (expand-file-name "init" make-compile-root))
+       (init-dir (expand-file-name "init" make-compile-root))
+       (package-dir (expand-file-name "package" make-compile-root))
+       (entries (cons init-dir (directory-files package-dir t "\\`[^.]"))))
+  (make-compile-prune init-dir)
   (make-compile-prune package-dir)
-  (make-compile-target
-   `(byte-recompile-directory ,(expand-file-name "init" make-compile-root) 0)
-   args)
-  (dolist (entry (directory-files package-dir t "\\`[^.]"))
+  (dolist (entry entries)
     (cond ((file-directory-p entry)
            (make-compile-target `(byte-recompile-directory ,entry 0) args))
           ((string-suffix-p ".el" entry)
@@ -83,6 +116,19 @@ compiles against it, and one whose `.el' upstream removed is loaded for good."
            ;; counterpart.
            (make-compile-target
             `(progn (require 'bytecomp) (byte-recompile-file ,entry nil 0))
-            args)))))
+            args))))
+  (when (native-comp-available-p)
+    ;; Checking in this Emacs means a package with nothing stale starts no
+    ;; Emacs of its own.
+    (dolist (entry entries)
+      (when-let* ((els (make-compile-native-stale entry)))
+        (make-compile-target
+         `(dolist (el ',els)
+            (message "Native-compiling %s" el)
+            (condition-case err
+                (native-compile el)
+              (error (message "Native compile of %s failed: %S" el err))))
+         args)))
+    (native-compile-prune-cache)))
 
 ;;; make-compile.el ends here

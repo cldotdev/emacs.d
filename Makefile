@@ -46,6 +46,11 @@ update:
 	@# newer, and helm's `autoloads' target has no prerequisites to force
 	@# the rebuild, so upgrading Emacs alone never updates the header.
 	rm -f ${helm_dir}/helm-autoloads.el
+	@# magit's and helm's own rules rebuild a file only when its own source
+	@# changes, not when a macro it takes from another submodule does, so an
+	@# upgrade rebuilds both from scratch.
+	$(MAKE) -C ${magit_dir} clean-lisp
+	$(MAKE) -C ${helm_dir} clean
 	$(MAKE) compile
 
 compile:
@@ -69,12 +74,11 @@ compile:
 		-L ${llama_dir} \
 		-L ${cond_let_dir} \
 		-L ${pkg_dir}" >config.mk && \
-		make clean && \
 		make lisp
-	cd ${helm_dir} && make clean && EMACSLOADPATH="${async_dir}:" make
-	@# Everything the two makefiles above did not build.  Their `.elc' are
-	@# newer than their sources by now, and `byte-recompile-directory'
-	@# leaves such a file alone.
+	cd ${helm_dir} && EMACSLOADPATH="${async_dir}:" make autoloads compile
+	@# Byte-compile everything the two makefiles above did not build, then
+	@# native-compile all of it.  Their `.elc' are newer than their sources
+	@# by now, and `byte-recompile-directory' leaves such a file alone.
 	emacs --batch -l make-compile.el
 
 # Build every tree-sitter grammar listed in init/init-treesit-grammars.el.

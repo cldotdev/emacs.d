@@ -74,9 +74,11 @@ Each of the following is needed only by the feature named beside it, and everyth
    make
    ```
 
-   `make` byte-compiles the configuration and its packages, then clones and compiles every tree-sitter grammar pinned in `init/init-treesit-grammars.el`, which needs network access. Run `make compile` instead to do the byte-compilation alone.
+   `make` byte-compiles and native-compiles the configuration and its packages, then clones and compiles every tree-sitter grammar pinned in `init/init-treesit-grammars.el`, which needs network access. Run `make compile` instead to do the compilation alone, without the grammars.
 
-   `make compile` builds magit and helm through their own makefiles, then walks `init/` and `package/` with `make-compile.el`. Every package is compiled in an Emacs of its own, against the `load-path` the init files add at startup: a batch Emacs starts without that `load-path` and would compile each macro the vendored packages provide into a plain function call, and a shared session lets one package redefine what the next compiles against. Before the walk it deletes every `.elc` that is older than its `.el` or whose `.el` is gone, since `require` would otherwise hand the compiler the stale one.
+   `make compile` builds magit and helm incrementally through their own makefiles, which rebuild a file only when its own source changes, then walks `init/` and `package/` with `make-compile.el`. Every package is compiled in an Emacs of its own, against the `load-path` the init files add at startup: a batch Emacs starts without that `load-path` and would compile each macro the vendored packages provide into a plain function call, and a shared session lets one package redefine what the next compiles against. Before the walk it deletes every `.elc` that is older than its `.el` or whose `.el` is gone, since `require` would otherwise hand the compiler the stale one.
+
+   After the byte-compile, it native-compiles every `.el` with a `.elc` whose `.eln` is missing or older than the `.elc`, in the same kind of separate Emacs and against the same `load-path`; a package with nothing to native-compile starts no Emacs. This includes magit and helm because their makefiles rebuild the `.elc` without touching the `.eln`. Emacs loads a `.eln` only when it is not older than the `.elc`, and otherwise falls back to the `.elc` and queues a background native compile that prints warnings. It skips tests, development scripts and cucumber step definitions (`make-compile-native-skip`), which no session loads. At the end it prunes the `eln-cache/` directories of other Emacs builds.
 
    `init.el` itself is left uncompiled. It sets `load-prefer-newer`, so an edit under `init/` takes effect at the next start whether or not `make compile` has run since.
 
@@ -87,7 +89,7 @@ cd ~/.emacs.d
 make update
 ```
 
-`make update` pulls with `--ff-only`, syncs and updates every submodule recursively, and then runs `make compile`. It also removes two kinds of leftovers:
+`make update` pulls with `--ff-only`, syncs and updates every submodule recursively, deletes the compiled files of magit and helm, and then runs `make compile`, so both are rebuilt in full. When you bump a submodule by hand instead, first remove the `.elc` files of whatever uses its macros, because `make compile` rebuilds a file only when its own source changed. `make update` also removes two kinds of leftovers:
 
 - The work tree of a submodule that upstream removed. `git pull` cannot remove it (`warning: unable to rmdir`) and `git submodule update` ignores it, so otherwise it sits in `package/` forever. A directory that holds a git repository git did not create as a submodule work tree is reported and kept.
 - `package/helm/helm-autoloads.el`, which `make compile` regenerates. `loaddefs-generate` rewrites the file only when a helm source is newer, and helm's `autoloads` target has no prerequisites to force the rebuild, so upgrading Emacs alone leaves the file in an older format that Emacs 30 and later warn about at startup.
