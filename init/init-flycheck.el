@@ -100,11 +100,12 @@ Result is cached per project for the rest of the Emacs session."
     (setq-local flycheck-disabled-checkers
                 (append flycheck-disabled-checkers '(sh-shellcheck)))))
 
-(add-hook 'sh-mode-hook 'my-flycheck-disable-shellcheck-for-env-files)
+(add-hook 'sh-base-mode-hook 'my-flycheck-disable-shellcheck-for-env-files)
 
 ;; Re-detect shell dialect from shebang before Flycheck runs.
-;; When creating new .sh files, sh-mode sets sh-shell to `sh` (default)
-;; before the shebang is written, causing ShellCheck to use POSIX mode.
+;; bash-ts-mode, which opens every shell script, sets `sh-shell' to bash
+;; even under a `#!/bin/sh' shebang, and a new file has no shebang yet
+;; when the mode starts, so ShellCheck would otherwise check in bash mode.
 (defun my-flycheck-set-shell-from-shebang ()
   "Re-detect shell from shebang before Flycheck runs."
   (save-excursion
@@ -114,7 +115,7 @@ Result is cached per project for the rest of the Emacs session."
         (when (and interp (not (string= interp (symbol-name sh-shell))))
           (sh-set-shell interp nil nil))))))
 
-(add-hook 'sh-mode-hook
+(add-hook 'sh-base-mode-hook
           (lambda ()
             (add-hook 'flycheck-before-syntax-check-hook
                       #'my-flycheck-set-shell-from-shebang nil t)))
