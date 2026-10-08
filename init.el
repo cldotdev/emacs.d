@@ -140,6 +140,7 @@
 (require 'init-css-mode)
 (require 'init-c-mode)
 (require 'init-cheetah-mode)
+(require 'init-ahk-mode)
 
 ;; Modern JS/TS via the built-in treesit
 (require 'init-js-ts)

@@ -12,6 +12,7 @@
 - Common Lisp: SLIME
 - PHP: `php-ts-mode`
 - C / C++: `c-ts-mode` and `c++-ts-mode`, with the Linux indent style
+- AutoHotkey v2: `ahk-ts-mode`, defined in `init/init-ahk-mode.el`, for `.ahk` and `.ah2` files; v1 scripts are not supported
 - SQL: `sql-mode`, formatted by sql-formatter
 - Shell: `bash-ts-mode`, checked by ShellCheck
 - Markdown: `markdown-mode` and `gfm-mode`, checked by rumdl, with the list and table behaviour below

@@ -7,6 +7,8 @@
 ;; ABI 14, which libtree-sitter loads at ABI 14 and 15 alike. The entries
 ;; using the `:commit' form mirror the commits that Emacs 31.1's own modes
 ;; declare, so each mode gets the grammar it was written against.
+;; `autohotkey' is neither: it is ABI 15 only and pinned for
+;; init-ahk-mode.
 
 (require 'treesit)
 
@@ -37,6 +39,8 @@
                     :commit "b253abf68a73217b7a52c0ec254f4b6a7bb86665")
         (phpdoc     "https://github.com/claytonrcarter/tree-sitter-phpdoc"
                     :commit "03bb10330704b0b371b044e937d5cc7cd40b4999")
+        (autohotkey "https://github.com/holy-tao/tree-sitter-autohotkey"
+                    :commit "d2d7f1f5cbe79b4b04063d663661a8a9e3f7b19e")
         ;; Same ABI split as `php-ts-mode--language-source-alist'.
         (php        "https://github.com/tree-sitter/tree-sitter-php"
                     :commit ,(if (and (treesit-available-p)
