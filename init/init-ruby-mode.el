@@ -1,7 +1,4 @@
 ;;; -*- lexical-binding: t; -*-
-;; Route .rb (and friends) to the tree-sitter major mode.
-(add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode))
-
 (defadvice ruby-ts-mode-indent (after unindent-closing-paren activate)
   (let ((column (current-column))
         indent offset)

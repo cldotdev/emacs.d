@@ -19,9 +19,9 @@
       (quote (("default"
                ("org" (mode . org-mode))
                ("dirs" (mode . dired-mode))
-               ("python" (mode . python-mode))
-               ("php" (mode . php-mode))
-               ("js" (mode . js2-mode))
+               ("python" (derived-mode . python-base-mode))
+               ("php" (mode . php-ts-mode))
+               ("js" (derived-mode . (js-base-mode typescript-ts-base-mode)))
                ("templates" (mode . web-mode))
                ("emacs" (or
                          (name . "^.+\\.el$")

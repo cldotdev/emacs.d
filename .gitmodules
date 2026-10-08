@@ -46,9 +46,6 @@
 [submodule "package/emacs-async"]
 	path = package/emacs-async
 	url = https://github.com/jwiegley/emacs-async.git
-[submodule "package/php-mode"]
-	path = package/php-mode
-	url = https://github.com/ejmr/php-mode.git
 [submodule "package/ghub"]
 	path = package/ghub
 	url = https://github.com/magit/ghub.git
@@ -103,18 +100,9 @@
 [submodule "package/rubocop-emacs"]
 	path = package/rubocop-emacs
 	url = https://github.com/rubocop/rubocop-emacs.git
-[submodule "package/elisp-tree-sitter"]
-	path = package/elisp-tree-sitter
-	url = https://github.com/emacs-tree-sitter/elisp-tree-sitter
 [submodule "package/fringe-helper.el"]
 	path = package/fringe-helper.el
 	url = https://github.com/nschum/fringe-helper.el.git
-[submodule "package/ts-fold"]
-	path = package/ts-fold
-	url = https://github.com/emacs-tree-sitter/ts-fold
-[submodule "package/tree-sitter-langs"]
-	path = package/tree-sitter-langs
-	url = https://github.com/cldotdev/tree-sitter-langs.git
 [submodule "package/rust-mode"]
 	path = package/rust-mode
 	url = https://github.com/rust-lang/rust-mode.git

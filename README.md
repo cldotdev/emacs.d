@@ -10,10 +10,10 @@
 - Rust: `rust-mode` deriving from tree-sitter, with flycheck-rust
 - Ruby: `ruby-ts-mode` with yard-mode, ruby-end, and RuboCop run through mise and bundler
 - Common Lisp: SLIME
-- PHP: `php-mode`
-- C: `c-mode`
+- PHP: `php-ts-mode`
+- C / C++: `c-ts-mode` and `c++-ts-mode`, with the Linux indent style
 - SQL: `sql-mode`, formatted by sql-formatter
-- Shell: `sh-mode`, checked by ShellCheck
+- Shell: `bash-ts-mode`, checked by ShellCheck
 - Markdown: `markdown-mode` and `gfm-mode`, checked by rumdl, with the list and table behaviour below
 - Web templates: `web-mode` and `cheetah-mode`
 - Data and configuration: YAML, JSON, TOML, Dockerfile, CSV, nginx, HCL
@@ -32,7 +32,7 @@
 - Terminal clipboard integration: OSC 52 through clipetty on GNU/Linux, pbcopy and pbpaste on macOS
 - mise supplies PATH and the rest of the environment at startup
 - Emacsclient temp files adopt the caller's working directory, so relative path completion works in e.g. Claude Code prompt files
-- Tree-sitter grammars pinned in `init/init-treesit-grammars.el`
+- Tree-sitter grammars pinned in `init/init-treesit-grammars.el`, and the built-in tree-sitter modes switched on through `treesit-enabled-modes` in `init/init-treesit.el`
 
 ### Markdown Lists and Tables
 
@@ -43,7 +43,7 @@
 
 ## Requirements
 
-- emacs >= 30
+- emacs >= 31
 - git, for Magit and for the tree-sitter grammar build
 - gcc (or cc), for the tree-sitter grammar build
 

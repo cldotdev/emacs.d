@@ -7,12 +7,6 @@
 (add-to-list 'auto-mode-alist
              '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . gfm-mode))
 
-(defun my/markdown-ensure-syntax-propertize (&rest _args)
-  "Ensure syntax properties are up-to-date before imenu scans.
-tree-sitter-hl-mode bypasses syntax-propertize, causing
-markdown-code-block-at-point-p to miss fenced code blocks."
-  (syntax-propertize (point-max)))
-
 ;; Bind S-Tab to decrease indentation (promote) in list items
 (with-eval-after-load 'markdown-mode
   ;; Disable electric backquote prompt when typing ```
@@ -59,13 +53,7 @@ markdown-code-block-at-point-p to miss fenced code blocks."
   (advice-add 'markdown-promote-list-item
               :override #'my/markdown-promote-list-item)
   (advice-add 'markdown-demote-list-item
-              :override #'my/markdown-demote-list-item)
-  ;; Ensure syntax-propertize runs before imenu scans, so that
-  ;; markdown-code-block-at-point-p correctly detects fenced code blocks.
-  (advice-add 'markdown-imenu-create-nested-index
-              :before #'my/markdown-ensure-syntax-propertize)
-  (advice-add 'markdown-imenu-create-flat-index
-              :before #'my/markdown-ensure-syntax-propertize))
+              :override #'my/markdown-demote-list-item))
 
 (defconst my/markdown-list-item-regexp
   "^[ \t]*\\(?:[0-9]+[.)]\\|[-*+]\\)[ \t]"
@@ -314,13 +302,7 @@ ordered item."
   (let ((bounds (and (save-excursion
                        (beginning-of-line)
                        (my/markdown-list-item-line-p))
-                     ;; tree-sitter-hl-mode bypasses syntax-propertize,
-                     ;; so make sure markdown-code-block-at-point-p can
-                     ;; see the fences above point.  RET runs this
-                     ;; command on every line, and propertizing is the
-                     ;; expensive step, so do it only from a list item.
-                     (progn (syntax-propertize (line-end-position))
-                            (not (markdown-code-block-at-point-p)))
+                     (not (markdown-code-block-at-point-p))
                      (my/markdown-list-bounds))))
     (when bounds
       (save-excursion
@@ -397,11 +379,7 @@ looks exactly like an ordered item."
            (and (my/markdown-list-item-line-p)
                 (looking-at my/markdown-list-item-content-regexp)
                 (= (match-end 0) position)))
-         ;; tree-sitter-hl-mode bypasses syntax-propertize, so make
-         ;; sure markdown-code-block-at-point-p can see the fences
-         ;; above point.
-         (progn (syntax-propertize (line-end-position))
-                (not (markdown-code-block-at-point-p))))))
+         (not (markdown-code-block-at-point-p)))))
 
 (defun my/markdown-strip-list-item-marker ()
   "Replace the marker of the list item at point with spaces.

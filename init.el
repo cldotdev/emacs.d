@@ -1,5 +1,5 @@
 ;;; Emacs configuration  -*- lexical-binding: t -*-
-;;; requirement: emacs >= 30
+;;; requirement: emacs >= 31
 
 ;; `make compile' byte-compiles `init/' and `package/', and `load' takes a
 ;; `.elc' over its source regardless of timestamps, so without this an edit
@@ -79,7 +79,10 @@
 ;; consumed by both interactive Emacs and `make grammars').
 (require 'init-treesit-grammars)
 
-;; Eglot (LSP) - built into Emacs 30. Wires pyright for python-ts-mode.
+;; Built-in tree-sitter modes
+(require 'init-treesit)
+
+;; Eglot (LSP), built in. Wires pyright for python-ts-mode.
 (require 'init-eglot)
 
 ;; Terminal clipboard integration
@@ -135,11 +138,7 @@
 (require 'init-c-mode)
 (require 'init-cheetah-mode)
 
-;; php-mode
-;; https://github.com/ejmr/php-mode
-(require 'init-php-mode)
-
-;; Modern JS/TS via Emacs 30 built-in treesit
+;; Modern JS/TS via the built-in treesit
 (require 'init-js-ts)
 
 (require 'init-go-mode)
@@ -151,11 +150,6 @@
 (require 'init-yaml-mode)
 
 (require 'init-json-mode)
-
-;; toml-mode
-(require 'init-toml)
-
-(require 'init-dockerfile-mode)
 
 ;; csv-mode
 ;; http://elpa.gnu.org/packages/csv-mode.html
@@ -190,10 +184,6 @@
 ;; An Emacs minor mode that highlights numeric literals in source code.
 ;; https://github.com/Fanael/highlight-numbers
 (require 'init-highlight-numbers)
-
-;; tree-sitter
-;; https://github.com/emacs-tree-sitter/elisp-tree-sitter
-(require 'init-tree-sitter)
 
 ;; imenu-list
 ;; https://github.com/bmag/imenu-list
