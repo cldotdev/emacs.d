@@ -1,18 +1,13 @@
 ;;; -*- lexical-binding: t; -*-
-(defadvice ruby-ts-mode-indent (after unindent-closing-paren activate)
-  (let ((column (current-column))
-        indent offset)
-    (save-excursion
-      (back-to-indentation)
-      (let ((state (syntax-ppss)))
-        (setq offset (- column (current-column)))
-        (when (and (eq (char-after) ?\))
-                   (not (zerop (car state))))
-          (goto-char (cadr state))
-          (setq indent (current-indentation)))))
-    (when indent
-      (indent-line-to indent)
-      (when (> offset 0) (forward-char offset)))))
+(defvar treesit-simple-indent-rules)
+
+(defun my-ruby-ts-close-paren-at-opener ()
+  "Indent a closing paren to the line that opened it.
+ruby-ts-mode lines it up under the first argument instead."
+  (push '((node-is ")") parent-bol 0)
+        (alist-get 'ruby treesit-simple-indent-rules)))
+
+(add-hook 'ruby-ts-mode-hook #'my-ruby-ts-close-paren-at-opener)
 
 ;; inf-ruby
 ;; (add-to-list 'load-path "~/.emacs.d/package/inf-ruby")
