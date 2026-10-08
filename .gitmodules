@@ -13,21 +13,6 @@
 [submodule "package/flycheck"]
 	path = package/flycheck
 	url = https://github.com/flycheck/flycheck.git
-[submodule "package/Highlight-Indentation-for-Emacs"]
-	path = package/Highlight-Indentation-for-Emacs
-	url = https://github.com/antonj/Highlight-Indentation-for-Emacs.git
-[submodule "package/elpy"]
-	path = package/elpy
-	url = https://github.com/jorgenschaefer/elpy.git
-[submodule "package/find-file-in-project"]
-	path = package/find-file-in-project
-	url = https://github.com/technomancy/find-file-in-project.git
-[submodule "package/idomenu"]
-	path = package/idomenu
-	url = https://github.com/birkenfeld/idomenu.git
-[submodule "package/pyvenv"]
-	path = package/pyvenv
-	url = https://github.com/jorgenschaefer/pyvenv.git
 [submodule "package/magit"]
 	path = package/magit
 	url = https://github.com/magit/magit.git
@@ -37,9 +22,6 @@
 [submodule "package/osx-clipboard-mode"]
 	path = package/osx-clipboard-mode
 	url = https://github.com/joddie/osx-clipboard-mode.git
-[submodule "package/scss-mode"]
-	path = package/scss-mode
-	url = https://github.com/antonj/scss-mode.git
 [submodule "package/helm"]
 	path = package/helm
 	url = https://github.com/emacs-helm/helm.git
@@ -100,9 +82,6 @@
 [submodule "package/rubocop-emacs"]
 	path = package/rubocop-emacs
 	url = https://github.com/rubocop/rubocop-emacs.git
-[submodule "package/fringe-helper.el"]
-	path = package/fringe-helper.el
-	url = https://github.com/nschum/fringe-helper.el.git
 [submodule "package/rust-mode"]
 	path = package/rust-mode
 	url = https://github.com/rust-lang/rust-mode.git
