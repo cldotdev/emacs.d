@@ -14,6 +14,7 @@ libegit2_dir = ${pkg_dir}/libegit2
 compat_dir = ${pkg_dir}/compat
 llama_dir = ${pkg_dir}/llama
 cond_let_dir = ${pkg_dir}/cond-let
+jobs ?= $(shell getconf _NPROCESSORS_ONLN)
 
 all: compile grammars
 
@@ -74,7 +75,10 @@ compile:
 		-L ${llama_dir} \
 		-L ${cond_let_dir} \
 		-L ${pkg_dir}" >config.mk && \
-		make lisp
+		$(MAKE) -j${jobs} lisp
+	@# magit's makefiles declare the build order between its files, so it
+	@# builds in parallel.  helm's do not, so it stays on a plain `make',
+	@# which runs serially even under `make -jN'.
 	cd ${helm_dir} && EMACSLOADPATH="${async_dir}:" make autoloads compile
 	@# Byte-compile everything the two makefiles above did not build, then
 	@# native-compile all of it.  Their `.elc' are newer than their sources
