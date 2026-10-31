@@ -9,7 +9,6 @@
 - Go: `go-ts-mode` and `go-mod-mode`, with `M-x golint`
 - Rust: `rust-mode` deriving from tree-sitter, with flycheck-rust
 - Ruby: `ruby-ts-mode` with yard-mode, ruby-end, and RuboCop run through mise and bundler
-- Common Lisp: SLIME
 - PHP: `php-ts-mode`
 - C / C++: `c-ts-mode` and `c++-ts-mode`, with the Linux indent style
 - AutoHotkey v2: `ahk-ts-mode`, defined in `init/init-ahk-mode.el`, for `.ahk` and `.ah2` files; v1 scripts are not supported
@@ -50,7 +49,6 @@
 
 Each of the following is needed only by the feature named beside it, and everything else keeps working without it:
 
-- clisp: SLIME
 - pyright-langserver, ruff: Python
 - mise: the startup environment, and the RuboCop wrapper that runs `mise x -- bundle exec rubocop`
 - shellcheck: shell linting
@@ -120,7 +118,6 @@ make update
 | Global | `M-<up>`, `M-<down>` | move-line-up and move-line-down (move the line, or the region, one line up or down) |
 | Global | ``M-` ``, `ESC M-x` | lacarte-execute-command (run a menu bar command from the minibuffer) |
 | Global | `C-j` | end-of-line-and-indent-new-line (break at the end of the line and indent the new one) |
-| Global | `M-x slime`, `C-u M-x slime` | slime (start a REPL with `inferior-lisp-program`, or, with a prefix argument, prompt for the lisp to run) |
 | Global | `f8`, `f9` | highlight-symbol-at-point (highlight every occurrence of the symbol at point) and highlight-symbol-remove-all (drop every such highlight) |
 | Global | `f12` | Open a shell buffer; a lambda around `shell`, with no named command of its own |
 | Global | `C-<f12>` | whitespace-mode (show tabs, trailing space and the rest as visible glyphs) |
@@ -135,8 +132,6 @@ make update
 | Global | `C-c ;` | mc/mark-all-like-this-dwim (add a cursor at every occurrence of the symbol at point) |
 | Global | `C-s-<left>`, `C-s-<right>` | buffer-order-prev-mark and buffer-order-next-mark (walk this buffer's mark ring) |
 | ibuffer | `C-c g`, `C-c C-g` | ibuffer-vc-set-filter-groups-by-vc-root (group the buffer list by version control root) |
-| lisp-mode | `C-c C-k` | slime-compile-and-load-file (compile the buffer's file and load the result) |
-| lisp-mode | `C-c C-c` | slime-compile-defun (compile the top-level form at point) |
 | markdown-mode | `RET` | my/markdown-insert-list-item-on-enter (continue the list at point and renumber it; shadows the default markdown-enter-key) |
 | markdown-mode | `DEL` | my/markdown-delete-marker-on-backspace (replace a list item's marker with spaces when point sits right after it and renumber the list, or unindent a line that holds nothing but whitespace before point to the previous column it can nest at; shadows markdown-outdent-or-delete, which unindents through the columns of markdown-calc-indents instead) |
 | markdown-mode | `TAB` | markdown-cycle (cycle the line at point through the columns it can nest at under the list above, then renumber the list; the stock binding, with the columns from my/markdown-indent-line and the renumbering from advice) |
@@ -147,11 +142,7 @@ make update
 | markdown-mode | `C-c \|` | my/markdown-table-compress-buffer (compress every table in the buffer) |
 | markdown-mode | `C-c C-x i` | markdown-insert-image (relocated from `C-c C-i`, which `C-c TAB` shadows in a terminal) |
 | markdown-mode | `C-c q` | my/markdown-toggle-blockquote (quote or unquote the region, or the line at point; the built-in `C-c C-s q` and `C-c C-s Q` only ever add a marker) |
-| SLIME REPL | `, q` | slime-handle-repl-shortcut, which `,` dispatches; `q` is the shortcut that quits SLIME |
-| SLIME REPL | `C-<up>`, `C-<down>` | slime-repl-backward-input and slime-repl-forward-input (walk the REPL input history) |
 | sql-mode | `C-c C-f` | sqlformat-buffer (reformat the buffer with sql-formatter) |
 | Vertico | `RET` | vertico-directory-enter (descend into the directory at point instead of accepting the candidate) |
 | Vertico | `DEL`, `M-DEL` | vertico-directory-delete-char and vertico-directory-delete-word (delete back through a path one character or one component at a time) |
 | web-mode | `C-c /` | web-mode-element-close (insert the closing tag for the element at point) |
-
-[SLIME REPL documentation](https://slime.common-lisp.dev/doc/html/REPL.html#REPL)

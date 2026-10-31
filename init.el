@@ -29,7 +29,6 @@
         (files missing-lexbind-cookie "~/.emacs.d/package/osx-clipboard-mode/osx-clipboard.el")
         (files missing-lexbind-cookie "~/.emacs.d/package/parent-mode/parent-mode.el")
         (files missing-lexbind-cookie "~/.emacs.d/package/s.el/s.el")
-        (files missing-lexbind-cookie "~/.emacs.d/package/slime/slime-autoloads.el")
         (files missing-lexbind-cookie "~/.emacs.d/package/yard-mode.el/yard-mode.el")))
 
 ;; Theme
@@ -122,11 +121,6 @@
 
 ;; erc
 (require 'init-erc)
-
-;; slime
-;; http://www.common-lisp.net/project/slime/
-;; https://github.com/slime/slime
-(require 'init-slime)
 
 (require 'init-makefile-mode)
 

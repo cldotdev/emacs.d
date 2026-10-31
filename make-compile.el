@@ -13,9 +13,9 @@
 ;; which would start the server and set up a whole session.
 ;;
 ;; Every package is compiled in an Emacs of its own, because one package can
-;; redefine what the next compiles against: `slime.el' defines a `when-let'
-;; of its own, and in a shared session each package the walk reaches after it
-;; compiles against that definition rather than the one in `subr-x'.
+;; redefine a function or macro the next compiles against, and in a shared
+;; session each package the walk reaches after it would pick up that
+;; definition.
 ;;
 ;; A `.elc' that `byte-recompile-directory' has not reached yet is still what
 ;; `require' hands the compiler, so every stale or orphaned one goes first.
@@ -53,9 +53,6 @@
         (goto-char (point-min))
         (while (re-search-forward "(add-to-list 'load-path \"\\([^\"]+\\)\")" nil t)
           (cl-pushnew (expand-file-name (match-string 1)) dirs :test #'equal))))
-    ;; `slime-setup' adds this one at run time, too late for a batch compile.
-    (cl-pushnew (expand-file-name "package/slime/contrib" make-compile-root)
-                dirs :test #'equal)
     (nreverse dirs)))
 
 (defun make-compile-prune (dir)
