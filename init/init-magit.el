@@ -193,6 +193,11 @@ with a Git revert subject."
 
 (setq magit-section-visibility-indicators nil)
 
+;; Magit hooks this for log buffers only; do the same in the status buffer so
+;; moving between commits refreshes a revision buffer shown in the same frame.
+(add-hook 'magit-section-movement-hook
+          #'magit-status-maybe-update-revision-buffer)
+
 ;; `magit-commit' passes --verbose by default, which appends the cut line and
 ;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
 ;; shows that diff in its own window.  The prefix's `:value' initarg fills the
