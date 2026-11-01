@@ -193,10 +193,16 @@ with a Git revert subject."
 
 (setq magit-section-visibility-indicators nil)
 
-;; Magit hooks this for log buffers only; do the same in the status buffer so
-;; moving between commits refreshes a revision buffer shown in the same frame.
-(add-hook 'magit-section-movement-hook
-          #'magit-status-maybe-update-revision-buffer)
+;; Magit hooks up only the log buffer's revision updater by default.  In the
+;; status buffer, moving to a commit or stash refreshes the revision, stash or
+;; blob buffer shown in the same frame.  The blob updater does nothing as of
+;; Magit 4.7.1: `magit--maybe-update-blob-buffer' looks for blob buffers by
+;; `magit-revert-rev-file-buffer', which upstream renamed.
+(dolist (hook '(magit-section-movement-hook magit-mouse-set-point-hook))
+  (dolist (fn '(magit-status-maybe-update-revision-buffer
+                magit-status-maybe-update-stash-buffer
+                magit-status-maybe-update-blob-buffer))
+    (add-hook hook fn)))
 
 ;; `magit-commit' passes --verbose by default, which appends the cut line and
 ;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
