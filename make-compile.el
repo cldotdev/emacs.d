@@ -20,15 +20,16 @@
 ;; A `.elc' that `byte-recompile-directory' has not reached yet is still what
 ;; `require' hands the compiler, so every stale or orphaned one goes first.
 ;;
-;; Every `.elc' outside `make-compile-native-skip' then gets its `.eln' in
-;; `eln-cache/'.  `load' swaps a `.elc' for its `.eln' only when the `.eln'
-;; is not older than the `.elc'; otherwise it loads the `.elc' and queues a
-;; native compile in the background, which warns about every dependency it
-;; cannot see.  The
-;; makefiles for magit and helm rebuild their `.elc' without touching the
-;; `.eln', so a rebuild leaves the `.eln' older, and only the timestamps
-;; tell.  `native-compile-prune-cache' then drops the directories of every
-;; other Emacs build.
+;; Every `.elc' then gets its `.eln' in `eln-cache/'.  `load' swaps a `.elc'
+;; for its `.eln' only when the `.eln' is not older than the `.elc'; otherwise
+;; it loads the `.elc' and queues a native compile in the background, which
+;; warns about every dependency it cannot see.  The makefiles for magit and
+;; helm rebuild their `.elc' without touching the `.eln', so a rebuild leaves
+;; the `.eln' older, and only the timestamps tell.
+;; `native-compile-prune-cache' then drops the directories of every other
+;; Emacs build.
+;;
+;; Neither step compiles the sources `make-compile-skip' matches.
 ;;
 ;; `init.el' itself stays uncompiled.  It is a list of `require' forms, so
 ;; there is nothing to gain, and `load' reads it before the
@@ -55,6 +56,19 @@
           (cl-pushnew (expand-file-name (match-string 1)) dirs :test #'equal))))
     (nreverse dirs)))
 
+(defconst make-compile-skip
+  "/\\(?:tests?\\|dev\\|bin\\|features\\)/\\|[-/]tests?\\.el\\'"
+  "Regexp for the sources neither step compiles, matched relative to the root.
+They are tests, development scripts and cucumber step definitions that no
+session loads.  Some cannot compile at all: the cucumber environments require
+espuds, which is not vendored, and `native-compile' fails on dash's examples
+with `invalid-read-syntax' \"#<\" while loading the file it writes.")
+
+(defun make-compile-skip-p (file)
+  "Return non-nil when FILE is a source `make-compile-skip' matches."
+  (string-match-p make-compile-skip
+                  (file-relative-name file make-compile-root)))
+
 (defun make-compile-prune (dir)
   "Delete every `.elc' under DIR that no longer stands for its source.
 One older than its `.el' is what `require' loads while the rest of the tree
@@ -73,18 +87,11 @@ compiles against it, and one whose `.el' upstream removed is loaded for good."
            (append args (list "--eval" (format "%S" form))))
     (princ (buffer-string))))
 
-(defconst make-compile-native-skip
-  "/\\(?:tests?\\|dev\\|features\\)/\\|-tests?\\.el\\'"
-  "Regexp for the sources the native step skips, matched relative to the root.
-They are tests, development scripts and cucumber step definitions that no
-session loads, so native-compiling them only costs build time and `eln-cache/'
-space.  `native-compile' also fails on dash's examples with
-`invalid-read-syntax' \"#<\" while loading the file it writes.")
-
 (defun make-compile-native-stale (entry)
   "Return the sources under ENTRY whose `.eln' is missing or out of date.
 ENTRY is a directory or a single `.el'.  Only a source with a `.elc' counts,
-so files that opt out of compiling stay out."
+so files that opt out of compiling, or that `make-compile-skip' matches, stay
+out."
   (let ((elcs (cond ((file-directory-p entry)
                      (directory-files-recursively entry "\\.elc\\'"))
                     ((and (string-suffix-p ".el" entry)
@@ -92,8 +99,7 @@ so files that opt out of compiling stay out."
                      (list (concat entry "c"))))))
     (cl-loop for elc in elcs
              for el = (substring elc 0 -1)
-             unless (string-match-p make-compile-native-skip
-                                    (file-relative-name el make-compile-root))
+             unless (make-compile-skip-p el)
              when (file-newer-than-file-p elc (comp-el-to-eln-filename el))
              collect el)))
 
@@ -102,12 +108,21 @@ so files that opt out of compiling stay out."
                              (make-compile-load-path))))
        (init-dir (expand-file-name "init" make-compile-root))
        (package-dir (expand-file-name "package" make-compile-root))
-       (entries (cons init-dir (directory-files package-dir t "\\`[^.]"))))
+       (entries (cl-remove-if #'make-compile-skip-p
+                              (cons init-dir
+                                    (directory-files package-dir t "\\`[^.]"))))
+       ;; `byte-recompile-directory' matches these against absolute paths.
+       (ignore (concat "\\`" (regexp-quote make-compile-root)
+                       ".*\\(?:" make-compile-skip "\\)")))
   (make-compile-prune init-dir)
   (make-compile-prune package-dir)
   (dolist (entry entries)
     (cond ((file-directory-p entry)
-           (make-compile-target `(byte-recompile-directory ,entry 0) args))
+           (make-compile-target
+            `(progn (require 'bytecomp)
+                    (setq byte-compile-ignore-files (list ,ignore))
+                    (byte-recompile-directory ,entry 0))
+            args))
           ((string-suffix-p ".el" entry)
            ;; `byte-recompile-file' is not autoloaded, unlike its directory
            ;; counterpart.
