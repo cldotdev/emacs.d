@@ -204,6 +204,32 @@ with a Git revert subject."
                 magit-status-maybe-update-blob-buffer))
     (add-hook hook fn)))
 
+;; Magit reuses one revision buffer per repository and, on refresh, restores
+;; point and window start to the section they were on, so a new commit opens
+;; where the previous one was left, often deep in its diff.  Start at the top
+;; when the buffer switches to another commit; showing the same commit again
+;; keeps the position.  Called from a file-visiting buffer, `magit-show-commit'
+;; moves to the matching diff line only after this returns, so that jump is
+;; unaffected.
+(defun my/magit-revision-start-at-top (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS, then move to the top if the commit changed."
+  (let* ((old-buffer (magit-get-mode-buffer 'magit-revision-mode))
+         (old-oid (and old-buffer
+                       (buffer-local-value 'magit-buffer-revision-oid
+                                           old-buffer)))
+         (buffer (apply orig-fun args)))
+    (with-current-buffer buffer
+      (unless (and (eq buffer old-buffer)
+                   (equal old-oid magit-buffer-revision-oid))
+        (goto-char (point-min))
+        (dolist (window (get-buffer-window-list buffer nil t))
+          (set-window-point window (point-min))
+          (set-window-start window (point-min)))))
+    buffer))
+
+(advice-add 'magit-revision-setup-buffer :around
+            #'my/magit-revision-start-at-top)
+
 ;; `magit-commit' passes --verbose by default, which appends the cut line and
 ;; the whole staged diff to the message buffer; `magit-commit-show-diff' already
 ;; shows that diff in its own window.  The prefix's `:value' initarg fills the

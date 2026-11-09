@@ -23,7 +23,7 @@
 - Minibuffer completion with Vertico and Orderless, including directory navigation, a grid layout for files, and per-category layouts
 - In-buffer completion with Corfu and Cape, whose popup Emacs 31 draws on a terminal itself
 - On-the-fly syntax checks with Flycheck
-- Git with Magit and Forge. Moving to a commit or stash in the status buffer, by key or by mouse, updates the revision or stash buffer shown in the same frame
+- Git with Magit and Forge. Moving to a commit or stash in the status buffer, by key or by mouse, updates the revision or stash buffer shown in the same frame. The revision buffer starts at the top whenever it switches to another commit
 - undo-tree, multiple-cursors, imenu-list, indent-bars, highlight-symbol, highlight-numbers, visible-mark, window-numbering
 - Helm, loaded for its own `helm-` commands; nothing is rebound to it
 - dumb-jump for jumping to a definition without a language server
