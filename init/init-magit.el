@@ -193,6 +193,12 @@ with a Git revert subject."
 
 (setq magit-section-visibility-indicators nil)
 
+;; Delete discarded files outright.  By default Magit moves them to the
+;; system trash, which nothing empties.  Keep `delete' and `discard' out of
+;; `magit-no-confirm': the prompt is all that stands between a discard and a
+;; lost untracked file.
+(setq magit-delete-by-moving-to-trash nil)
+
 ;; Magit hooks up only the log buffer's revision updater by default.  In the
 ;; status buffer, moving to a commit or stash refreshes the revision, stash or
 ;; blob buffer shown in the same frame.  The blob updater does nothing as of
